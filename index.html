@@ -3,733 +3,996 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>zenkai</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet"/>
+<title>zenkai - developer</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 :root{
-  --bg:#07090f;
-  --bg2:#0c0f1c;
-  --fg:#e8eaf2;
+  --bg:#050709;
+  --bg2:#090c14;
+  --fg:#dde1f0;
   --accent:#00d4ff;
-  --accentR:0;--accentG:212;--accentB:255;
+  --aR:0;--aG:212;--aB:255;
   --accent2:#ff6b6b;
-  --accent3:#a78bfa;
   --green:#00ffb3;
-  --dim:#181c2e;
-  --border:#1e2338;
-  --muted:#454870;
+  --dim:#0e1120;
+  --border:#161929;
+  --muted:#3d4060;
+  --muted2:#6b6f8f;
   --font-d:'Syne',sans-serif;
   --font-m:'JetBrains Mono',monospace;
+  --px:clamp(1.5rem,6vw,4rem);
+  --py:clamp(5rem,10vh,9rem);
 }
 
-/* CURSOR */
-#cursor{position:fixed;width:10px;height:10px;background:var(--accent);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .15s,height .15s;mix-blend-mode:screen}
-#cursor-ring{position:fixed;width:34px;height:34px;border:1px solid rgba(var(--accentR),var(--accentG),var(--accentB),.2);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:border-color .4s,opacity .2s}
-body{background:var(--bg);color:var(--fg);font-family:var(--font-m);overflow-x:hidden;cursor:none}
-#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+/* ── SCROLLBAR ────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border)}
 
-/* ==================== COLOR WHEEL ==================== */
-#color-picker{
-  position:fixed;bottom:2rem;right:2rem;z-index:200;
-  display:flex;flex-direction:column;align-items:center;gap:.6rem;
+/* ── LOADER ───────────────────────────────────────────────────────────────── */
+#loader{
+  position:fixed;inset:0;z-index:10000;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .7s ease, visibility .7s ease;
 }
-#wheel-btn{
-  width:42px;height:42px;border-radius:50%;
-  border:1px solid var(--border);
-  background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);
-  cursor:none;
-  transition:transform .3s,box-shadow .3s;
-  box-shadow:none;
+#loader.out{opacity:0;visibility:hidden;pointer-events:none}
+
+.ld-window{
+  width:min(560px,92vw);
+  background:#0a0d16;
+  border:1px solid #1a1f33;
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:0 0 0 1px #0d1020, 0 40px 100px rgba(0,0,0,.9), 0 0 60px rgba(var(--aR),var(--aG),var(--aB),.04);
+}
+
+/* macOS traffic lights */
+.ld-titlebar{
+  display:flex;align-items:center;
+  padding:.7rem 1rem;
+  background:#0d1020;
+  border-bottom:1px solid #1a1f33;
+  gap:.5rem;position:relative;
+}
+.ld-traff{display:flex;gap:.45rem;align-items:center}
+.ld-btn{
+  width:12px;height:12px;border-radius:50%;
+  position:relative;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.ld-btn.red{background:#ff5f57;box-shadow:0 0 0 .5px rgba(0,0,0,.4)}
+.ld-btn.yellow{background:#ffbd2e;box-shadow:0 0 0 .5px rgba(0,0,0,.4)}
+.ld-btn.green{background:#28c840;box-shadow:0 0 0 .5px rgba(0,0,0,.4)}
+.ld-btn.red::after{content:'×';font-size:7px;color:rgba(0,0,0,.45);line-height:1;font-weight:700;opacity:0}
+.ld-btn.yellow::after{content:'–';font-size:8px;color:rgba(0,0,0,.45);line-height:1;opacity:0}
+.ld-btn.green::after{content:'+';font-size:8px;color:rgba(0,0,0,.45);line-height:1;opacity:0}
+.ld-traff:hover .ld-btn::after{opacity:1}
+.ld-wintitle{
+  position:absolute;left:50%;transform:translateX(-50%);
+  font-family:var(--font-m);font-size:.58rem;letter-spacing:.08em;
+  color:#3a3f5c;pointer-events:none;
+}
+.ld-tabs{
+  display:flex;gap:0;
+  padding:.5rem 1rem 0;
+  background:#0d1020;
+  border-bottom:1px solid #1a1f33;
+}
+.ld-tab{
+  font-family:var(--font-m);font-size:.58rem;letter-spacing:.06em;
+  color:#3a3f5c;padding:.35rem .9rem .45rem;
+  border-radius:6px 6px 0 0;border:1px solid transparent;
+  border-bottom:none;position:relative;top:1px;
+}
+.ld-tab.active{
+  background:#0a0d16;border-color:#1a1f33;
+  color:#8890b8;
+}
+.ld-shell{
+  padding:1.4rem 1.5rem 1.8rem;
+  font-family:var(--font-m);
+  font-size:clamp(.62rem,.85vw,.72rem);
+  line-height:1.9;
+  min-height:220px;
   position:relative;
 }
-#wheel-btn:hover{transform:scale(1.12);box-shadow:0 0 12px rgba(255,255,255,.1)}
-#wheel-btn::after{
-  content:'';position:absolute;inset:4px;border-radius:50%;
-  background:var(--bg);transition:background .4s;
-}
-#color-panel{
-  background:var(--bg2);
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:1.2rem;
-  width:200px;
-  opacity:0;pointer-events:none;
-  transform:translateY(8px) scale(.97);
-  transition:opacity .25s,transform .25s;
-  position:absolute;bottom:54px;right:0;
-}
-#color-panel.open{opacity:1;pointer-events:all;transform:translateY(0) scale(1)}
-.panel-label{font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:.9rem}
-.presets{display:grid;grid-template-columns:repeat(5,1fr);gap:.45rem;margin-bottom:1rem}
-.preset{width:28px;height:28px;border-radius:50%;cursor:none;border:2px solid transparent;transition:transform .2s,border-color .2s;position:relative}
-.preset:hover{transform:scale(1.15)}
-.preset.active{border-color:var(--fg)}
-.hue-wrap{display:flex;flex-direction:column;gap:.4rem}
-.hue-label{font-size:.52rem;letter-spacing:.15em;color:var(--muted)}
-#hue-slider{
-  -webkit-appearance:none;appearance:none;
-  width:100%;height:6px;border-radius:3px;
-  background:linear-gradient(to right,red,yellow,lime,cyan,blue,magenta,red);
-  outline:none;cursor:none;
-}
-#hue-slider::-webkit-slider-thumb{
-  -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
-  background:var(--fg);border:2px solid var(--bg);cursor:none;
-}
-.sat-wrap{display:flex;flex-direction:column;gap:.4rem;margin-top:.6rem}
-#sat-slider{
-  -webkit-appearance:none;appearance:none;
-  width:100%;height:6px;border-radius:3px;outline:none;cursor:none;
-}
-#sat-slider::-webkit-slider-thumb{
-  -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
-  background:var(--fg);border:2px solid var(--bg);cursor:none;
-}
-.color-preview{
-  margin-top:.9rem;height:28px;border-radius:4px;
-  background:var(--accent);transition:background .2s;
-  border:1px solid var(--border);
-}
+.ld-line{opacity:0;transform:translateY(2px);transition:opacity .2s,transform .2s}
+.ld-line.on{opacity:1;transform:none}
+.lp{color:var(--accent)}.lg{color:var(--green)}.ly{color:#ffd580}
+.lm{color:var(--muted2)}.lw{color:var(--fg)}.lpurp{color:#a78bfa}
+.ld-cursor-blink{display:inline-block;width:7px;height:.85em;background:var(--accent);vertical-align:middle;animation:blink .9s step-end infinite}
 
-/* NAV */
-nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.3rem 3rem}
-nav::before{content:'';position:absolute;inset:0;background:rgba(7,9,15,.82);backdrop-filter:blur(22px);z-index:-1;border-bottom:1px solid var(--border)}
-.nav-logo{font-family:var(--font-d);font-weight:800;font-size:1.2rem;letter-spacing:.05em;color:var(--accent);text-decoration:none;position:relative}
-.nav-logo::after{content:'●';font-size:.32rem;position:absolute;top:2px;right:-11px;color:var(--accent2);animation:blink 1.2s step-end infinite}
+/* progress */
+.ld-footer{
+  padding:.8rem 1.5rem;
+  background:#070a12;
+  border-top:1px solid #1a1f33;
+  display:flex;align-items:center;gap:1rem;
+}
+.ld-pbar{flex:1;height:1px;background:#1a1f33;border-radius:1px;overflow:hidden}
+.ld-pfill{height:100%;width:0;background:var(--accent);transition:width .05s linear;box-shadow:0 0 8px rgba(var(--aR),var(--aG),var(--aB),.5)}
+.ld-pct{font-family:var(--font-m);font-size:.52rem;letter-spacing:.1em;color:var(--muted2);min-width:32px;text-align:right}
+
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-.nav-links{display:flex;gap:2rem;list-style:none}
-.nav-links a{font-size:.63rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s;position:relative}
-.nav-links a::after{content:'';position:absolute;bottom:-3px;left:0;right:0;height:1px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .25s}
-.nav-links a:hover{color:var(--fg)}
-.nav-links a:hover::after{transform:scaleX(1)}
-.nav-status{display:flex;align-items:center;gap:.55rem;font-size:.6rem;letter-spacing:.1em;color:var(--muted)}
-.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px rgba(0,255,179,.5);animation:pulse 2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+
+/* ── CURSOR ────────────────────────────────────────────────────────────────── */
+#cur{position:fixed;width:8px;height:8px;background:var(--accent);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .15s,height .15s,opacity .15s;mix-blend-mode:screen}
+#cur-r{position:fixed;width:32px;height:32px;border:1px solid rgba(var(--aR),var(--aG),var(--aB),.15);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%)}
+@media(hover:none){#cur,#cur-r{display:none};body{cursor:auto}}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-m);overflow-x:hidden;cursor:none}
+@media(hover:none){body{cursor:auto}}
+#bgc{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.6}
+
+/* ── COLOR PICKER ──────────────────────────────────────────────────────────── */
+#cpick{position:fixed;bottom:clamp(1rem,2.5vw,2rem);right:clamp(1rem,2.5vw,2rem);z-index:300}
+#wpanel{
+  position:absolute;bottom:54px;right:0;width:min(190px,88vw);
+  background:#0d1020;border:1px solid #1a1f33;border-radius:12px;
+  padding:1.1rem;opacity:0;pointer-events:none;transform:translateY(6px) scale(.98);
+  transition:opacity .2s,transform .2s;
+}
+#wpanel.open{opacity:1;pointer-events:all;transform:none}
+.wp-label{font-family:var(--font-m);font-size:.5rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted2);margin-bottom:.8rem}
+.wp-presets{display:grid;grid-template-columns:repeat(5,1fr);gap:.4rem;margin-bottom:.9rem}
+.wp-dot{width:26px;height:26px;border-radius:50%;cursor:none;border:2px solid transparent;transition:transform .15s,border-color .15s}
+@media(hover:none){.wp-dot{cursor:pointer}}
+.wp-dot:hover{transform:scale(1.15)}.wp-dot.on{border-color:var(--fg)}
+.wp-row{display:flex;flex-direction:column;gap:.35rem;margin-bottom:.5rem}
+.wp-row-label{font-family:var(--font-m);font-size:.48rem;letter-spacing:.15em;color:var(--muted2)}
+input[type=range].wp-range{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;outline:none;cursor:none}
+input[type=range].wp-range::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--fg);border:2px solid #0d1020}
+#hue-r{background:linear-gradient(to right,red,yellow,lime,cyan,blue,magenta,red)}
+.wp-prev{margin-top:.8rem;height:24px;border-radius:4px;background:var(--accent);transition:background .2s;border:1px solid #1a1f33}
+#wbtn{width:40px;height:40px;border-radius:50%;background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);cursor:none;border:1px solid #1a1f33;transition:transform .25s,box-shadow .25s;position:relative}
+@media(hover:none){#wbtn{cursor:pointer}}
+#wbtn:hover{transform:scale(1.1);box-shadow:0 0 14px rgba(255,255,255,.08)}
+#wbtn::after{content:'';position:absolute;inset:5px;border-radius:50%;background:var(--bg);transition:background .4s}
+
+/* ── NAV ────────────────────────────────────────────────────────────────────── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.9rem var(--px);
+}
+nav::before{
+  content:'';position:absolute;inset:0;
+  background:rgba(5,7,9,.75);backdrop-filter:blur(28px) saturate(140%);
+  z-index:-1;border-bottom:1px solid var(--border);
+}
+.nl{font-family:var(--font-d);font-weight:800;font-size:1.05rem;letter-spacing:.04em;color:var(--accent);text-decoration:none}
+.nlinks{display:flex;gap:clamp(.9rem,2.5vw,1.8rem);list-style:none}
+.nlinks a{font-family:var(--font-m);font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted2);text-decoration:none;transition:color .2s}
+.nlinks a:hover{color:var(--fg)}
+.ns{display:flex;align-items:center;gap:.5rem;font-family:var(--font-m);font-size:.56rem;letter-spacing:.1em;color:var(--muted2)}
+.nsdot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 5px rgba(0,255,179,.4);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.65)}}
 
 section{position:relative;z-index:1}
 
-/* HERO */
-#hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;align-items:center;padding:8rem 3rem 4rem;gap:4rem}
-.hero-eyebrow{font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);margin-bottom:1.5rem;display:flex;align-items:center;gap:.8rem}
-.hero-eyebrow::before{content:'';display:block;width:32px;height:1px;background:var(--accent)}
-.hero-name{font-family:var(--font-d);font-weight:800;font-size:clamp(3.5rem,8.5vw,8.5rem);line-height:.88;letter-spacing:-.04em;margin-bottom:1.5rem}
-.hero-name .stroke{-webkit-text-stroke:1.5px rgba(232,234,242,.35);color:transparent}
-.hero-name .acc{color:var(--accent)}
-.hero-tagline{font-size:.8rem;line-height:1.95;color:var(--muted);max-width:370px;margin-bottom:3rem}
-.hero-tagline strong{color:var(--fg);font-weight:400}
-.hero-btns{display:flex;gap:1rem;flex-wrap:wrap}
-.btn-mag{position:relative;padding:.85rem 2rem;font-family:var(--font-m);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;border:none;cursor:none;display:inline-block;transition:transform .2s}
-.btn-fill{background:var(--accent);color:#07090f;font-weight:700}
-.btn-fill:hover{filter:brightness(1.1)}
-.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
-.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
-
-/* TERMINAL */
-.terminal{background:#060810;border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 30px 60px rgba(0,0,0,.7)}
-.term-bar{display:flex;align-items:center;gap:.5rem;padding:.72rem 1rem;background:#0b0d18;border-bottom:1px solid var(--border)}
-.term-dot{width:11px;height:11px;border-radius:50%}
-.term-dot.r{background:#ff5f56}.term-dot.y{background:#ffbd2e}.term-dot.g{background:#27c93f}
-.term-title{margin:0 auto;font-size:.6rem;letter-spacing:.1em;color:var(--muted)}
-.term-body{padding:1.4rem;font-size:.74rem;line-height:2;min-height:280px}
-.term-line{opacity:0;transform:translateY(4px);transition:opacity .3s,transform .3s}
-.term-line.show{opacity:1;transform:none}
-.t-prompt{color:var(--accent)}.t-green{color:var(--green)}.t-cyan{color:var(--accent)}.t-muted{color:var(--muted)}.t-purple{color:var(--accent3)}
-.term-cursor{display:inline-block;width:8px;height:1em;background:var(--accent);vertical-align:text-bottom;animation:blink .8s step-end infinite;margin-left:2px}
-
-/* MARQUEE */
-.marquee-wrap{border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:.8rem 0;overflow:hidden;background:var(--bg2);position:relative;z-index:1}
-.marquee-track{display:flex;gap:2.5rem;animation:marquee 22s linear infinite;width:max-content}
-.marquee-track:hover{animation-play-state:paused}
-@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-.m-item{font-family:var(--font-d);font-size:.8rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:1rem;white-space:nowrap;transition:color .2s}
-.m-item:hover{color:var(--accent)}
-.m-dot{color:var(--accent);font-size:.45rem}
-
-/* SHARED */
-.side-num{font-family:var(--font-d);font-size:6rem;font-weight:800;line-height:1;color:var(--border);letter-spacing:-.05em}
-.side-label{font-size:.58rem;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);margin-top:.3rem}
-.section-heading{font-family:var(--font-d);font-size:clamp(2.5rem,5vw,4.8rem);font-weight:800;line-height:.9;letter-spacing:-.03em;margin-bottom:2.5rem}
-
-/* ABOUT */
-#about{padding:8rem 3rem;display:grid;grid-template-columns:160px 1fr;gap:5rem;align-items:start;border-top:1px solid var(--border)}
-.about-bio{font-size:.8rem;line-height:2;color:var(--muted);margin-bottom:3rem;max-width:540px}
-.about-bio strong{color:var(--fg);font-weight:400}
-.about-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border)}
-.about-cell{padding:1.5rem;background:var(--bg);transition:background .2s}
-.about-cell:hover{background:var(--bg2)}
-.cell-num{font-family:var(--font-d);font-size:2.1rem;font-weight:800;color:var(--accent);letter-spacing:-.03em}
-.cell-label{font-size:.56rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-top:.3rem}
-
-/* SKILLS */
-#skills{padding:8rem 3rem;border-top:1px solid var(--border)}
-.skills-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:3.5rem}
-.skill-row{display:grid;grid-template-columns:220px 1fr 60px;align-items:center;padding:1.5rem 0;border-bottom:1px solid var(--border);gap:2rem;cursor:default}
-.skill-row:first-of-type{border-top:1px solid var(--border)}
-.sk-name{font-family:var(--font-d);font-size:1.25rem;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:.85rem;transition:color .2s}
-.sk-name svg{width:26px;height:26px;flex-shrink:0}
-.skill-row:hover .sk-name{color:var(--accent)}
-.bar-track{height:2px;background:var(--border);border-radius:2px;overflow:visible;position:relative}
-.bar-fill{height:100%;border-radius:2px;background:var(--accent);width:0;transition:width 1.3s cubic-bezier(.16,1,.3,1);position:relative}
-.bar-fill::after{content:'';position:absolute;right:-1px;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--accent)}
-.sk-pct{font-size:.62rem;letter-spacing:.1em;color:var(--muted);text-align:right}
-
-/* PROJECTS */
-#projects{padding:8rem 3rem;border-top:1px solid var(--border)}
-.proj-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:3.5rem}
-.proj-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border)}
-.proj-card{background:var(--bg);padding:2.2rem;position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;min-height:260px;transition:background .3s}
-.proj-card.tall{grid-row:span 2;min-height:520px}
-.proj-card:hover{background:var(--bg2)}
-.proj-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;transform:scaleX(0);transform-origin:left;transition:transform .4s cubic-bezier(.16,1,.3,1);background:var(--accent)}
-.proj-card:hover::before{transform:scaleX(1)}
-.proj-num{position:absolute;top:1.5rem;right:1.8rem;font-size:.52rem;letter-spacing:.2em;color:var(--border)}
-.proj-logo{position:absolute;top:1.8rem;left:2.2rem;width:34px;height:34px;opacity:.5;transition:opacity .3s}
-.proj-card:hover .proj-logo{opacity:.85}
-.proj-type{font-size:.56rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:.55rem}
-.proj-title{font-family:var(--font-d);font-size:1.75rem;font-weight:800;letter-spacing:-.03em;margin-bottom:.55rem;line-height:1;color:var(--fg)}
-.proj-card.tall .proj-title{font-size:2.3rem}
-.proj-desc{font-size:.7rem;line-height:1.75;color:var(--muted);margin-bottom:1.2rem;max-width:340px}
-.tech-row{display:flex;gap:.4rem;flex-wrap:wrap}
-.tech-tag{font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--border);padding:.18rem .5rem;color:var(--muted);transition:border-color .2s}
-.proj-card:hover .tech-tag{border-color:rgba(var(--accentR),var(--accentG),var(--accentB),.25)}
-
-/* CONTACT */
-#contact{padding:8rem 3rem;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:6rem;align-items:center}
-.contact-sub{font-size:.78rem;line-height:1.95;color:var(--muted);margin-bottom:2.5rem;max-width:390px}
-.c-links{display:flex;flex-direction:column;gap:1px;background:var(--border)}
-.c-link{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;background:var(--bg);text-decoration:none;color:var(--fg);transition:background .2s,padding-left .3s}
-.c-link:hover{background:var(--bg2);padding-left:2rem}
-.c-left{display:flex;align-items:center;gap:1rem}
-.c-icon{width:30px;height:30px}
-.c-name{font-family:var(--font-d);font-size:.95rem;font-weight:700}
-.c-handle{font-size:.58rem;letter-spacing:.1em;color:var(--muted);margin-top:.1rem}
-.c-arr{color:var(--muted);transition:color .25s,transform .25s}
-.c-link:hover .c-arr{color:var(--accent);transform:translateX(5px)}
-.avail-box{border:1px solid var(--border);padding:2.5rem;position:relative;overflow:hidden;background:var(--bg2)}
-.avail-box::before{content:'';position:absolute;top:-80px;right:-80px;width:200px;height:200px;background:radial-gradient(circle,rgba(var(--accentR),var(--accentG),var(--accentB),.04),transparent 65%);pointer-events:none}
-.av-status{font-size:.56rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);margin-bottom:1.4rem;display:flex;align-items:center;gap:.55rem}
-.av-status::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px rgba(0,255,179,.4);animation:pulse 2s ease-in-out infinite}
-.av-title{font-family:var(--font-d);font-size:1.85rem;font-weight:800;letter-spacing:-.03em;margin-bottom:.8rem;line-height:1.1;color:var(--fg)}
-.av-desc{font-size:.72rem;line-height:1.85;color:var(--muted);margin-bottom:1.8rem}
-.av-mail{display:inline-block;font-size:.68rem;letter-spacing:.05em;color:var(--accent);border-bottom:1px solid rgba(var(--accentR),var(--accentG),var(--accentB),.3);text-decoration:none;padding-bottom:.2rem;transition:opacity .2s}
-.av-mail:hover{opacity:.6}
-
-footer{padding:1.8rem 3rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1}
-.ft-logo{font-family:var(--font-d);font-weight:800;font-size:.9rem;color:var(--muted);letter-spacing:.05em}
-.ft-copy{font-size:.56rem;letter-spacing:.12em;color:var(--muted)}
-
-/* REVEAL */
-.sr{opacity:0;transform:translateY(30px);transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1)}
-.sr.vis{opacity:1;transform:none}
-.sr-l{opacity:0;transform:translateX(-22px);transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1)}
-.sr-l.vis{opacity:1;transform:none}
-
-@media(max-width:900px){
-  nav{padding:1rem 1.5rem}.nav-links{display:none}
-  #hero{grid-template-columns:1fr;padding:6rem 1.5rem 3rem;gap:2.5rem}.hero-right{display:none}
-  #about{grid-template-columns:1fr;gap:2rem;padding:5rem 1.5rem}
-  #skills,#projects,#contact{padding:5rem 1.5rem}
-  .proj-grid{grid-template-columns:1fr}.proj-card.tall{grid-row:auto;min-height:260px}
-  #contact{grid-template-columns:1fr;gap:3rem}
-  footer{padding:1.5rem}
-  .skills-top,.proj-top{flex-direction:column;gap:1rem;align-items:flex-start}
-  #color-picker{bottom:1.2rem;right:1.2rem}
-}
-
-/* FLOATING DISCORD BUTTON */
-#discord-float{
-  position:fixed;
-  left:2rem;
-  bottom:2rem;
-  z-index:200;
-  display:flex;
+/* ── HERO ───────────────────────────────────────────────────────────────────── */
+#hero{
+  min-height:100vh;
+  display:grid;grid-template-columns:1fr 1fr;
   align-items:center;
-  gap:0;
-  cursor:none;
+  padding:clamp(5rem,11vh,8rem) var(--px) clamp(3rem,6vh,5rem);
+  gap:clamp(2.5rem,5vw,5rem);
 }
-#discord-float a{
-  display:flex;
-  align-items:center;
-  gap:.75rem;
-  text-decoration:none;
-  background:#5865F2;
-  border-radius:50px;
-  padding:.7rem .9rem;
-  transition:padding .3s cubic-bezier(.16,1,.3,1), gap .3s cubic-bezier(.16,1,.3,1), box-shadow .3s;
+.h-eyebrow{
+  font-family:var(--font-m);font-size:.58rem;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--muted2);margin-bottom:1.4rem;
+  display:flex;align-items:center;gap:.9rem;
+}
+.h-eyebrow::before{content:'';display:block;width:28px;height:1px;background:var(--accent)}
+.h-name{
+  font-family:var(--font-d);font-weight:800;
+  font-size:clamp(3rem,9vw,9rem);
+  line-height:.86;letter-spacing:-.04em;
+  margin-bottom:1.4rem;
+}
+.h-name .stroke{-webkit-text-stroke:1px rgba(221,225,240,.2);color:transparent}
+.h-name .acc{color:var(--accent)}
+.h-tag{
+  font-family:var(--font-m);font-size:clamp(.7rem,1vw,.76rem);
+  line-height:2;color:var(--muted2);
+  max-width:360px;margin-bottom:2.5rem;
+}
+.h-tag strong{color:var(--fg);font-weight:400}
+.h-btns{display:flex;gap:.9rem;flex-wrap:wrap}
+.btn{
+  font-family:var(--font-m);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;
+  padding:.75rem 1.8rem;text-decoration:none;cursor:none;
+  transition:transform .15s,filter .15s;display:inline-block;
+}
+@media(hover:none){.btn{cursor:pointer}}
+.btn-f{background:var(--accent);color:#050709;font-weight:700}
+.btn-f:hover{filter:brightness(1.1)}
+.btn-g{border:1px solid var(--border);color:var(--muted2);background:transparent}
+.btn-g:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── INTERACTIVE TERMINAL ──────────────────────────────────────────────────── */
+.term-wrap{
+  background:#07090f;
+  border:1px solid #161929;
+  border-radius:12px;
   overflow:hidden;
-  max-width:48px;
-  border:1px solid rgba(88,101,242,.4);
+  box-shadow:0 0 0 1px #0c0f1e, 0 30px 70px rgba(0,0,0,.7), 0 0 40px rgba(var(--aR),var(--aG),var(--aB),.03);
 }
-#discord-float a:hover{
-  max-width:220px;
-  padding:.7rem 1.2rem;
-  gap:.75rem;
-  box-shadow:0 8px 28px rgba(88,101,242,.3);
+.tbar{
+  display:flex;align-items:center;padding:.65rem 1rem;
+  background:#0b0d1a;border-bottom:1px solid #161929;gap:.45rem;
+  position:relative;
 }
-#discord-float .dc-icon{
-  width:22px;height:22px;flex-shrink:0;
+.tbar-traff{display:flex;gap:.4rem;align-items:center}
+.tb{width:11px;height:11px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center}
+.tb.r{background:#ff5f57}.tb.y{background:#ffbd2e}.tb.g{background:#28c840}
+.tb::after{font-size:6.5px;color:rgba(0,0,0,.4);opacity:0;font-weight:800;line-height:1}
+.tb.r::after{content:'×'}.tb.y::after{content:'–'}.tb.g::after{content:'+'};
+.tbar-traff:hover .tb::after{opacity:1}
+.tbar-title{
+  position:absolute;left:50%;transform:translateX(-50%);
+  font-family:var(--font-m);font-size:.56rem;letter-spacing:.07em;color:#2e3350;
 }
-#discord-float .dc-text{
+.ttabs{
+  display:flex;gap:0;background:#0b0d1a;
+  border-bottom:1px solid #161929;padding:.45rem 1rem 0;
+}
+.ttab{
+  font-family:var(--font-m);font-size:.55rem;letter-spacing:.06em;
+  color:#2e3350;padding:.3rem .8rem .38rem;
+  border-radius:5px 5px 0 0;border:1px solid transparent;border-bottom:none;
+  position:relative;top:1px;
+}
+.ttab.act{background:#07090f;border-color:#161929;color:#7b82a8}
+.tterm{
+  padding:1.2rem 1.3rem;
   font-family:var(--font-m);
-  font-size:.65rem;
-  letter-spacing:.08em;
-  color:#fff;
-  white-space:nowrap;
-  opacity:0;
-  transform:translateX(-6px);
-  transition:opacity .25s .05s, transform .25s .05s;
-  pointer-events:none;
+  font-size:clamp(.6rem,.85vw,.7rem);
+  line-height:1.85;
+  height:310px;
+  overflow-y:auto;
+  display:flex;flex-direction:column;gap:0;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
 }
-#discord-float a:hover .dc-text{
-  opacity:1;
-  transform:translateX(0);
+.tterm::-webkit-scrollbar{width:2px}
+.tterm::-webkit-scrollbar-thumb{background:var(--border)}
+.tline{display:flex;gap:0;flex-direction:column}
+.tout{padding-left:1.2rem;color:var(--muted2)}
+.tout.g{color:var(--green)}.tout.c{color:var(--accent)}.tout.p{color:#a78bfa}.tout.y{color:#ffd580}.tout.r{color:#ff5f57}.tout.w{color:var(--fg)}
+.tinput-row{
+  display:flex;align-items:center;
+  padding:.45rem 1.3rem;
+  border-top:1px solid #161929;
+  gap:.5rem;background:#06080e;
 }
-#discord-float .dc-handle{
-  color:rgba(255,255,255,.6);
-  font-size:.58rem;
-  display:block;
-  margin-top:.1rem;
+.t-prompt-sym{font-family:var(--font-m);font-size:.68rem;color:var(--accent);flex-shrink:0}
+.t-in{
+  flex:1;background:transparent;border:none;outline:none;
+  font-family:var(--font-m);font-size:.68rem;color:var(--fg);caret-color:var(--accent);
+  cursor:text;
 }
-@media(max-width:900px){
-  #discord-float{left:1.2rem;bottom:1.2rem}
+.t-in::placeholder{color:var(--muted)}
+.t-enter{font-family:var(--font-m);font-size:.5rem;letter-spacing:.1em;color:var(--muted);padding:.2rem .45rem;border:1px solid var(--border);color:var(--muted2);flex-shrink:0}
+
+/* ── MARQUEE ────────────────────────────────────────────────────────────────── */
+.mq{border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:.75rem 0;overflow:hidden;background:var(--dim);position:relative;z-index:1}
+.mq-t{display:flex;gap:2rem;animation:mq 25s linear infinite;width:max-content}
+.mq-t:hover{animation-play-state:paused}
+@keyframes mq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.mi{font-family:var(--font-d);font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:.9rem;white-space:nowrap;transition:color .2s}
+.mi:hover{color:var(--accent)}.mi span{color:var(--accent);font-size:.4rem}
+
+/* ── SECTION BASE ───────────────────────────────────────────────────────────── */
+.sec{padding:var(--py) var(--px);border-top:1px solid var(--border)}
+.sn{font-family:var(--font-d);font-size:clamp(3rem,7vw,5.5rem);font-weight:800;line-height:1;color:var(--border);letter-spacing:-.04em}
+.sl{font-family:var(--font-m);font-size:.52rem;letter-spacing:.28em;text-transform:uppercase;color:var(--muted2);margin-top:.3rem}
+.sh{font-family:var(--font-d);font-size:clamp(2rem,5vw,4.5rem);font-weight:800;line-height:.88;letter-spacing:-.03em;margin-bottom:2rem}
+
+/* ── ABOUT ──────────────────────────────────────────────────────────────────── */
+#about.sec{display:grid;grid-template-columns:clamp(90px,10vw,140px) 1fr;gap:clamp(2rem,5vw,5rem);align-items:start}
+.a-bio{font-family:var(--font-m);font-size:clamp(.68rem,1vw,.75rem);line-height:2;color:var(--muted2);max-width:520px;margin-bottom:2.5rem}
+.a-bio strong{color:var(--fg);font-weight:400}
+.a-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border)}
+.a-cell{padding:clamp(.9rem,2vw,1.4rem);background:var(--bg);transition:background .2s}
+.a-cell:hover{background:var(--bg2)}
+.a-num{font-family:var(--font-d);font-size:clamp(1.4rem,3vw,2rem);font-weight:800;color:var(--accent);letter-spacing:-.03em}
+.a-lbl{font-family:var(--font-m);font-size:.5rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted2);margin-top:.25rem}
+
+/* ── SKILLS ─────────────────────────────────────────────────────────────────── */
+.sk-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:3rem}
+.skrow{
+  display:grid;grid-template-columns:clamp(120px,18vw,200px) 1fr clamp(38px,4vw,52px);
+  align-items:center;padding:clamp(.9rem,2vh,1.3rem) 0;
+  border-bottom:1px solid var(--border);gap:clamp(.8rem,2vw,2rem);cursor:default;
+}
+.skrow:first-of-type{border-top:1px solid var(--border)}
+.sk-n{font-family:var(--font-d);font-size:clamp(.9rem,1.6vw,1.15rem);font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:.75rem;transition:color .2s}
+.sk-n svg{width:clamp(18px,2.2vw,24px);height:clamp(18px,2.2vw,24px);flex-shrink:0}
+.skrow:hover .sk-n{color:var(--accent)}
+.sk-bar{height:1px;background:var(--border);border-radius:1px;overflow:visible;position:relative}
+.sk-fill{height:100%;border-radius:1px;background:var(--accent);width:0;transition:width 1.4s cubic-bezier(.16,1,.3,1);position:relative}
+.sk-fill::after{content:'';position:absolute;right:-1px;top:-4px;width:9px;height:9px;border-radius:50%;background:var(--accent)}
+.sk-pct{font-family:var(--font-m);font-size:.56rem;letter-spacing:.1em;color:var(--muted2);text-align:right}
+
+/* ── PROJECTS ───────────────────────────────────────────────────────────────── */
+.pr-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:3rem}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border)}
+.pc{
+  background:var(--bg);padding:clamp(1.4rem,3vw,2rem);
+  position:relative;overflow:hidden;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  min-height:clamp(200px,20vw,250px);transition:background .25s;
+}
+.pc.tall{grid-row:span 2;min-height:clamp(400px,40vw,500px)}
+.pc:hover{background:var(--bg2)}
+.pc::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;transform:scaleX(0);transform-origin:left;transition:transform .4s cubic-bezier(.16,1,.3,1);background:var(--accent)}
+.pc:hover::before{transform:scaleX(1)}
+.pc-n{position:absolute;top:1.2rem;right:1.4rem;font-family:var(--font-m);font-size:.46rem;letter-spacing:.2em;color:var(--border)}
+.pc-ico{position:absolute;top:1.4rem;left:clamp(1.2rem,2vw,2rem);width:30px;height:30px;opacity:.45;transition:opacity .25s}
+.pc:hover .pc-ico{opacity:.75}
+.pc-type{font-family:var(--font-m);font-size:.48rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:.45rem}
+.pc-title{font-family:var(--font-d);font-size:clamp(1.1rem,2.2vw,1.6rem);font-weight:800;letter-spacing:-.03em;margin-bottom:.4rem;line-height:1;color:var(--fg)}
+.pc.tall .pc-title{font-size:clamp(1.4rem,2.8vw,2.1rem)}
+.pc-desc{font-family:var(--font-m);font-size:clamp(.58rem,.8vw,.64rem);line-height:1.75;color:var(--muted2);margin-bottom:1rem;max-width:300px}
+.tags{display:flex;gap:.35rem;flex-wrap:wrap}
+.tag{font-family:var(--font-m);font-size:.44rem;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--border);padding:.15rem .45rem;color:var(--muted2);transition:border-color .2s}
+.pc:hover .tag{border-color:rgba(var(--aR),var(--aG),var(--aB),.2)}
+
+/* ── CONTACT ────────────────────────────────────────────────────────────────── */
+#contact.sec{display:grid;grid-template-columns:1fr 1fr;gap:clamp(3rem,6vw,6rem);align-items:center}
+.ct-sub{font-family:var(--font-m);font-size:clamp(.66rem,1vw,.74rem);line-height:2;color:var(--muted2);margin-bottom:2rem;max-width:370px}
+.clinks{display:flex;flex-direction:column;gap:1px;background:var(--border)}
+.cl{display:flex;align-items:center;justify-content:space-between;padding:clamp(.9rem,2vh,1.15rem) clamp(.9rem,2vw,1.4rem);background:var(--bg);text-decoration:none;color:var(--fg);transition:background .2s,padding-left .25s}
+.cl:hover{background:var(--bg2);padding-left:calc(clamp(.9rem,2vw,1.4rem) + .6rem)}
+.cl-l{display:flex;align-items:center;gap:.9rem}
+.cl-ico{width:clamp(22px,2.5vw,28px);height:clamp(22px,2.5vw,28px);flex-shrink:0}
+.cl-name{font-family:var(--font-d);font-size:clamp(.75rem,1.3vw,.88rem);font-weight:700}
+.cl-hdl{font-family:var(--font-m);font-size:.5rem;letter-spacing:.1em;color:var(--muted2);margin-top:.1rem}
+.cl-arr{font-family:var(--font-m);color:var(--muted2);transition:color .2s,transform .2s;font-size:.8rem}
+.cl:hover .cl-arr{color:var(--accent);transform:translateX(4px)}
+.avail{border:1px solid var(--border);padding:clamp(1.4rem,3.5vw,2.3rem);background:var(--bg2);position:relative;overflow:hidden}
+.avail::before{content:'';position:absolute;top:-60px;right:-60px;width:180px;height:180px;background:radial-gradient(circle,rgba(var(--aR),var(--aG),var(--aB),.05),transparent 70%);pointer-events:none}
+.av-s{font-family:var(--font-m);font-size:.5rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted2);margin-bottom:1.2rem;display:flex;align-items:center;gap:.5rem}
+.av-s::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 5px rgba(0,255,179,.35);animation:pulse 2s ease-in-out infinite;flex-shrink:0}
+.av-t{font-family:var(--font-d);font-size:clamp(1.2rem,2.5vw,1.7rem);font-weight:800;letter-spacing:-.03em;margin-bottom:.7rem;line-height:1.1;color:var(--fg)}
+.av-d{font-family:var(--font-m);font-size:clamp(.62rem,.9vw,.68rem);line-height:1.9;color:var(--muted2);margin-bottom:1.5rem}
+.av-m{font-family:var(--font-m);font-size:clamp(.58rem,.85vw,.64rem);letter-spacing:.04em;color:var(--accent);border-bottom:1px solid rgba(var(--aR),var(--aG),var(--aB),.25);text-decoration:none;padding-bottom:.18rem;display:inline-block;transition:opacity .2s}
+.av-m:hover{opacity:.55}
+
+footer{padding:1.2rem var(--px);border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1}
+.ft-l{font-family:var(--font-d);font-weight:800;font-size:.85rem;color:var(--muted);letter-spacing:.04em}
+.ft-c{font-family:var(--font-m);font-size:.5rem;letter-spacing:.12em;color:var(--muted2)}
+
+/* ── DISCORD FLOAT ──────────────────────────────────────────────────────────── */
+#dcf{position:fixed;left:clamp(1rem,2.5vw,2rem);bottom:clamp(1rem,2.5vw,2rem);z-index:200}
+#dcf a{display:flex;align-items:center;gap:.7rem;text-decoration:none;background:#5865F2;border-radius:50px;padding:.65rem .85rem;transition:max-width .3s cubic-bezier(.16,1,.3,1),padding .3s,box-shadow .3s;overflow:hidden;max-width:46px;border:1px solid rgba(88,101,242,.35)}
+#dcf a:hover{max-width:210px;padding:.65rem 1.1rem;box-shadow:0 8px 26px rgba(88,101,242,.28)}
+#dcf .di{width:20px;height:20px;flex-shrink:0}
+#dcf .dt{font-family:var(--font-m);font-size:.6rem;letter-spacing:.07em;color:#fff;white-space:nowrap;opacity:0;transform:translateX(-5px);transition:opacity .2s .04s,transform .2s .04s;pointer-events:none}
+#dcf a:hover .dt{opacity:1;transform:none}
+#dcf .dh{color:rgba(255,255,255,.55);font-size:.54rem;display:block;margin-top:.08rem}
+
+/* ── REVEAL ─────────────────────────────────────────────────────────────────── */
+.sr{opacity:0;transform:translateY(24px);transition:opacity .85s cubic-bezier(.16,1,.3,1),transform .85s cubic-bezier(.16,1,.3,1)}
+.sr.v{opacity:1;transform:none}
+.sl-{opacity:0;transform:translateX(-18px);transition:opacity .85s cubic-bezier(.16,1,.3,1),transform .85s cubic-bezier(.16,1,.3,1)}
+.sl-.v{opacity:1;transform:none}
+
+/* ── RESPONSIVE ─────────────────────────────────────────────────────────────── */
+@media(max-width:1024px) and (min-width:769px){
+  #hero{grid-template-columns:1fr;gap:3rem}
+  .hero-right{display:none}
+  #about.sec{grid-template-columns:90px 1fr;gap:2rem}
+  .pgrid{grid-template-columns:1fr 1fr}
+  .pc.tall{grid-row:auto}
+  .pc[style*="grid-column"]{grid-column:auto}
+  #contact.sec{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+  :root{--px:1.25rem;--py:3.5rem}
+  nav{padding:.8rem var(--px)}
+  .nlinks{display:none}
+  .ns .nst{display:none}
+  #hero{grid-template-columns:1fr;min-height:100svh;padding:5rem var(--px) 3rem;gap:0}
+  .hero-right{display:none}
+  .h-name{font-size:clamp(2.6rem,14vw,5rem)}
+  #about.sec{grid-template-columns:1fr;gap:1.2rem}
+  .sk-top,.pr-top{flex-direction:column;gap:.8rem;align-items:flex-start}
+  .skrow{grid-template-columns:1fr clamp(36px,12vw,52px);gap:.6rem}
+  .sk-n{grid-column:1/-1;font-size:clamp(.85rem,3.5vw,1rem)}
+  .pgrid{grid-template-columns:1fr}
+  .pc.tall{grid-row:auto;min-height:200px}
+  .pc[style*="grid-column"]{grid-column:auto}
+  #contact.sec{grid-template-columns:1fr;gap:2rem}
+  .sh{font-size:clamp(1.8rem,9vw,3rem)}
+}
+@media(max-width:380px){
+  .h-name{font-size:2.5rem}
+  .a-stats{grid-template-columns:1fr 1fr}
+  .a-stats .a-cell:last-child{grid-column:1/-1}
 }
 </style>
 </head>
 <body>
 
-<div id="cursor"></div>
-<div id="cursor-ring"></div>
-<canvas id="bg-canvas"></canvas>
-
-<!-- COLOR WHEEL -->
-<div id="color-picker">
-  <div id="color-panel">
-    <div class="panel-label">Theme Color</div>
-    <div class="presets">
-      <div class="preset active" data-h="192" style="background:#00d4ff" title="Cyan"></div>
-      <div class="preset" data-h="270" style="background:#a78bfa" title="Purple"></div>
-      <div class="preset" data-h="340" style="background:#ff6b9d" title="Pink"></div>
-      <div class="preset" data-h="22" style="background:#ff9a3c" title="Orange"></div>
-      <div class="preset" data-h="145" style="background:#00e676" title="Green"></div>
-      <div class="preset" data-h="55" style="background:#ffe53c" title="Yellow"></div>
-      <div class="preset" data-h="0" style="background:#ff5252" title="Red"></div>
-      <div class="preset" data-h="210" style="background:#4d8eff" title="Blue"></div>
-      <div class="preset" data-h="180" style="background:#00e5cc" title="Teal"></div>
-      <div class="preset" data-h="300" style="background:#e040fb" title="Magenta"></div>
+<!-- ────────────────────────── LOADER ────────────────────────────────────── -->
+<div id="loader">
+  <div class="ld-window">
+    <div class="ld-titlebar">
+      <div class="ld-traff">
+        <div class="ld-btn red"></div>
+        <div class="ld-btn yellow"></div>
+        <div class="ld-btn green"></div>
+      </div>
+      <div class="ld-wintitle">zenkai@macbook - zsh - 80×24</div>
     </div>
-    <div class="hue-wrap">
-      <div class="hue-label">Hue</div>
-      <input type="range" id="hue-slider" min="0" max="360" value="192"/>
+    <div class="ld-tabs">
+      <div class="ld-tab active">zsh &nbsp; 1</div>
+      <div class="ld-tab">zsh &nbsp; 2</div>
     </div>
-    <div class="sat-wrap">
-      <div class="hue-label">Brightness</div>
-      <input type="range" id="sat-slider" min="40" max="100" value="75"/>
+    <div class="ld-shell" id="ld-shell"></div>
+    <div class="ld-footer">
+      <div class="ld-pbar"><div class="ld-pfill" id="lpf"></div></div>
+      <div class="ld-pct" id="lpct">0%</div>
     </div>
-    <div class="color-preview" id="color-preview"></div>
   </div>
-  <div id="wheel-btn" title="Change theme color"></div>
 </div>
 
-<!-- NAV -->
+<!-- ────────────────────────── CURSOR ────────────────────────────────────── -->
+<div id="cur"></div>
+<div id="cur-r"></div>
+<canvas id="bgc"></canvas>
+
+<!-- ────────────────────────── COLOR PICKER ──────────────────────────────── -->
+<div id="cpick">
+  <div id="wpanel">
+    <div class="wp-label">Theme Color</div>
+    <div class="wp-presets">
+      <div class="wp-dot on" data-h="192" style="background:#00d4ff"></div>
+      <div class="wp-dot" data-h="270" style="background:#a78bfa"></div>
+      <div class="wp-dot" data-h="340" style="background:#ff6b9d"></div>
+      <div class="wp-dot" data-h="22" style="background:#ff9a3c"></div>
+      <div class="wp-dot" data-h="145" style="background:#00e676"></div>
+      <div class="wp-dot" data-h="55" style="background:#ffe53c"></div>
+      <div class="wp-dot" data-h="0" style="background:#ff5252"></div>
+      <div class="wp-dot" data-h="210" style="background:#4d8eff"></div>
+      <div class="wp-dot" data-h="180" style="background:#00e5cc"></div>
+      <div class="wp-dot" data-h="300" style="background:#e040fb"></div>
+    </div>
+    <div class="wp-row">
+      <div class="wp-row-label">Hue</div>
+      <input type="range" id="hue-r" class="wp-range" min="0" max="360" value="192"/>
+    </div>
+    <div class="wp-row">
+      <div class="wp-row-label">Brightness</div>
+      <input type="range" id="lum-r" class="wp-range" min="35" max="95" value="75" style="background:linear-gradient(to right,hsl(192,85%,35%),hsl(192,85%,95%))"/>
+    </div>
+    <div class="wp-prev" id="wp-prev"></div>
+  </div>
+  <div id="wbtn" title="Change theme"></div>
+</div>
+
+<!-- ────────────────────────── NAV ───────────────────────────────────────── -->
 <nav>
-  <a class="nav-logo" href="#hero">ZENKAI</a>
-  <ul class="nav-links">
+  <a class="nl" href="#hero">ZENKAI</a>
+  <ul class="nlinks">
     <li><a href="#about">About</a></li>
     <li><a href="#skills">Stack</a></li>
     <li><a href="#projects">Work</a></li>
     <li><a href="#contact">Contact</a></li>
   </ul>
-  <div class="nav-status"><div class="status-dot"></div>Available for work</div>
+  <div class="ns"><div class="nsdot"></div><span class="nst">Available for work</span></div>
 </nav>
 
-<!-- HERO -->
+<!-- ────────────────────────── HERO ──────────────────────────────────────── -->
 <section id="hero">
   <div class="hero-left">
-    <div class="hero-eyebrow">Based in India &nbsp;/&nbsp; Developer & Creator</div>
-    <h1 class="hero-name">
+    <div class="h-eyebrow">Based in India &nbsp;/&nbsp; Developer & Creator</div>
+    <h1 class="h-name">
       <div>ZENKAI</div>
       <div class="stroke">BUILDS</div>
       <div class="acc">THINGS.</div>
     </h1>
-    <p class="hero-tagline">Developer who works in HTML, Python & JavaScript. I build <strong>websites</strong>, <strong>Discord bots</strong>, and <strong>custom tools</strong> that actually work.</p>
-    <div class="hero-btns">
-      <a href="#projects" class="btn-mag btn-fill">View Work</a>
-      <a href="#contact" class="btn-mag btn-ghost">Get in Touch</a>
+    <p class="h-tag">Developer who works in HTML, Python & JavaScript. I build <strong>websites</strong>, <strong>Discord bots</strong>, and <strong>custom tools</strong> that actually work.</p>
+    <div class="h-btns">
+      <a href="#projects" class="btn btn-f">View Work</a>
+      <a href="#contact" class="btn btn-g">Get in Touch</a>
     </div>
   </div>
   <div class="hero-right">
-    <div class="terminal">
-      <div class="term-bar">
-        <div class="term-dot r"></div><div class="term-dot y"></div><div class="term-dot g"></div>
-        <div class="term-title">zenkai@dev — bash</div>
+    <div class="term-wrap">
+      <div class="tbar">
+        <div class="tbar-traff">
+          <div class="tb r"></div>
+          <div class="tb y"></div>
+          <div class="tb g"></div>
+        </div>
+        <div class="tbar-title">zenkai@dev - zsh</div>
       </div>
-      <div class="term-body" id="term-out"></div>
+      <div class="ttabs">
+        <div class="ttab act">bash &nbsp;-&nbsp; zenkai</div>
+      </div>
+      <div class="tterm" id="tterm"></div>
+      <div class="tinput-row">
+        <span class="t-prompt-sym">❯</span>
+        <input class="t-in" id="t-in" type="text" placeholder="type a command..." autocomplete="off" autocorrect="off" spellcheck="false"/>
+        <span class="t-enter">↵ Enter</span>
+      </div>
     </div>
   </div>
 </section>
 
 <!-- MARQUEE -->
-<div class="marquee-wrap">
-  <div class="marquee-track">
-    <div class="m-item">HTML5 <span class="m-dot">✦</span></div>
-    <div class="m-item">CSS3 <span class="m-dot">✦</span></div>
-    <div class="m-item">JavaScript <span class="m-dot">✦</span></div>
-    <div class="m-item">Python <span class="m-dot">✦</span></div>
-    <div class="m-item">Discord Bots <span class="m-dot">✦</span></div>
-    <div class="m-item">Web Design <span class="m-dot">✦</span></div>
-    <div class="m-item">Custom Tools <span class="m-dot">✦</span></div>
-    <div class="m-item">Git <span class="m-dot">✦</span></div>
-    <div class="m-item">HTML5 <span class="m-dot">✦</span></div>
-    <div class="m-item">CSS3 <span class="m-dot">✦</span></div>
-    <div class="m-item">JavaScript <span class="m-dot">✦</span></div>
-    <div class="m-item">Python <span class="m-dot">✦</span></div>
-    <div class="m-item">Discord Bots <span class="m-dot">✦</span></div>
-    <div class="m-item">Web Design <span class="m-dot">✦</span></div>
-    <div class="m-item">Custom Tools <span class="m-dot">✦</span></div>
-    <div class="m-item">Git <span class="m-dot">✦</span></div>
+<div class="mq">
+  <div class="mq-t">
+    <div class="mi">HTML5 <span>✦</span></div>
+    <div class="mi">CSS3 <span>✦</span></div>
+    <div class="mi">JavaScript <span>✦</span></div>
+    <div class="mi">Python <span>✦</span></div>
+    <div class="mi">Discord Bots <span>✦</span></div>
+    <div class="mi">Web Design <span>✦</span></div>
+    <div class="mi">Custom Tools <span>✦</span></div>
+    <div class="mi">Git <span>✦</span></div>
+    <div class="mi">HTML5 <span>✦</span></div>
+    <div class="mi">CSS3 <span>✦</span></div>
+    <div class="mi">JavaScript <span>✦</span></div>
+    <div class="mi">Python <span>✦</span></div>
+    <div class="mi">Discord Bots <span>✦</span></div>
+    <div class="mi">Web Design <span>✦</span></div>
+    <div class="mi">Custom Tools <span>✦</span></div>
+    <div class="mi">Git <span>✦</span></div>
   </div>
 </div>
 
 <!-- ABOUT -->
-<section id="about">
-  <div class="sr-l">
-    <div class="side-num">01</div>
-    <div class="side-label">About</div>
+<section id="about" class="sec">
+  <div class="sl-">
+    <div class="sn">01</div>
+    <div class="sl">About</div>
   </div>
   <div>
-    <h2 class="section-heading sr">I CODE,<br>I CREATE,<br>I SHIP.</h2>
-    <p class="about-bio sr">Hey — I'm <strong>Zenkai</strong>. I build for the web because I want to make things that feel right and look sharp.<br><br>From <strong>custom websites</strong> to <strong>Discord bots</strong> to <strong>Python tools</strong> — I move across the stack and figure it out. I don't just write code, I build things people actually use.</p>
-    <div class="about-grid sr">
-      <div class="about-cell"><div class="cell-num count-up" data-target="3">0</div><div class="cell-label">Languages</div></div>
-      <div class="about-cell"><div class="cell-num count-up" data-target="100">0</div><div class="cell-label">% In</div></div>
-      <div class="about-cell"><div class="cell-num" style="font-family:var(--font-d);font-size:2.1rem;font-weight:800;color:var(--accent)">∞</div><div class="cell-label">Ideas</div></div>
+    <h2 class="sh sr">I CODE,<br>I CREATE,<br>I SHIP.</h2>
+    <p class="a-bio sr">Hey - I'm <strong>Zenkai</strong>. I build for the web because I want to make things that feel right and look sharp.<br><br>From <strong>custom websites</strong> to <strong>Discord bots</strong> to <strong>Python tools</strong> - I move across the stack and figure it out. I don't just write code, I build things people actually use.</p>
+    <div class="a-stats sr">
+      <div class="a-cell"><div class="a-num cu" data-t="3">0</div><div class="a-lbl">Languages</div></div>
+      <div class="a-cell"><div class="a-num cu" data-t="100">0</div><div class="a-lbl">% In</div></div>
+      <div class="a-cell"><div class="a-num" style="font-family:var(--font-d);font-size:clamp(1.4rem,3vw,2rem);font-weight:800;color:var(--accent)">∞</div><div class="a-lbl">Ideas</div></div>
     </div>
   </div>
 </section>
 
 <!-- SKILLS -->
-<section id="skills">
-  <div class="skills-top">
-    <div class="sr-l"><div class="side-num" style="font-size:4.5rem">02</div><div class="side-label">My Stack</div></div>
-    <h2 class="section-heading sr" style="text-align:right">WHAT<br>I USE</h2>
+<section id="skills" class="sec">
+  <div class="sk-top">
+    <div class="sl-"><div class="sn">02</div><div class="sl">My Stack</div></div>
+    <h2 class="sh sr" style="text-align:right;margin-bottom:0">WHAT<br>I USE</h2>
   </div>
   <div>
-    <div class="skill-row sr">
-      <div class="sk-name">
-        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M5 3l1.9 21.4L16 27l9.1-2.6L27 3z" fill="#e44d26"/><path d="M16 25.4V5H5.9L7.5 23.2z" fill="#f16529"/><path d="M16 13.3h-4.3l-.3-3.3H16V7H8.1l.8 9.3H16zm0 7.3l-.1.1-3.6-1-.2-2.5H9.2l.5 5.3L16 24.4z" fill="#ebebeb"/><path d="M16 13.3v3h3.9l-.4 4.3-3.5 1v3.2l6.5-1.8.1-.6 1-10.9.1-1.2H16zm0-6.3v3h7.7l.2-3z" fill="#fff"/></svg>
-        HTML5
-      </div>
-      <div class="bar-track"><div class="bar-fill" data-w="92"></div></div>
-      <div class="sk-pct">92%</div>
-    </div>
-    <div class="skill-row sr">
-      <div class="sk-name">
-        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M5 3l1.9 21.4L16 27l9.1-2.6L27 3z" fill="#1572b6"/><path d="M16 25.4V5H5.9L7.5 23.2z" fill="#33a9dc"/><path d="M16 13h4.4l-.3 3.5-4.1 1.1v3.2l7.6-2.1.1-.6 1.2-13H16v3zm0-6h8l-.3 3H16z" fill="#fff"/><path d="M16 13H8l.2 3h7.8v-1.5H9.3l-.2-1.5H16zm.1 4.6l-.1.1-3.6-1-.2-2.5H9.2l.5 5.3L16 21z" fill="#ebebeb"/></svg>
-        CSS3
-      </div>
-      <div class="bar-track"><div class="bar-fill" data-w="88"></div></div>
-      <div class="sk-pct">88%</div>
-    </div>
-    <div class="skill-row sr">
-      <div class="sk-name">
-        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="3" fill="#f7df1e"/><path d="M9.7 25.6l2.1-1.3c.4.7.8 1.3 1.7 1.3.9 0 1.4-.3 1.4-1.6v-8.6h2.6V24c0 2.7-1.6 3.9-3.9 3.9-2.1 0-3.3-1.1-3.9-2.3zm8.3-.3l2.1-1.2c.5.9 1.2 1.5 2.4 1.5 1 0 1.6-.5 1.6-1.2 0-.8-.7-1.1-1.8-1.6l-.6-.3c-1.8-.8-3-1.7-3-3.7 0-1.9 1.4-3.3 3.6-3.3 1.6 0 2.7.6 3.5 2l-2 1.3c-.4-.7-.9-1-1.6-1-.7 0-1.2.4-1.2 1 0 .7.4 1 1.5 1.4l.6.3c2.1.9 3.3 1.8 3.3 3.9 0 2.2-1.7 3.5-4 3.5-2.3 0-3.7-1.1-4.4-2.6z"/></svg>
-        JavaScript
-      </div>
-      <div class="bar-track"><div class="bar-fill" data-w="78"></div></div>
-      <div class="sk-pct">78%</div>
-    </div>
-    <div class="skill-row sr">
-      <div class="sk-name">
-        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="pb" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#387EB8"/><stop offset="100%" stop-color="#366994"/></linearGradient><linearGradient id="py" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFE052"/><stop offset="100%" stop-color="#FFC331"/></linearGradient></defs><path d="M15.9 3C11 3 11.3 5.1 11.3 5.1V7.2h4.7v.7H8.6S5 7.5 5 12.4s3.1 4.8 3.1 4.8h1.9v-2.3s-.1-3.1 3.1-3.1h5.3s3 .05 3-2.9V5.8S21.9 3 15.9 3zm-2.9 1.7c.5 0 .9.4.9.9s-.4.9-.9.9-.9-.4-.9-.9.4-.9.9-.9z" fill="url(#pb)"/><path d="M16.1 29c4.9 0 4.6-2.1 4.6-2.1v-2.1h-4.7v-.7h7.4s3.6.4 3.6-4.5-3.1-4.8-3.1-4.8h-1.9v2.3s.1 3.1-3.1 3.1h-5.3s-3-.05-3 2.9v4.1S10.1 29 16.1 29zm2.9-1.7c-.5 0-.9-.4-.9-.9s.4-.9.9-.9.9.4.9.9-.4.9-.9.9z" fill="url(#py)"/></svg>
-        Python
-      </div>
-      <div class="bar-track"><div class="bar-fill" data-w="82"></div></div>
-      <div class="sk-pct">82%</div>
-    </div>
-    <div class="skill-row sr">
-      <div class="sk-name">
-        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M29.5 14.6L17.4 2.5a1.7 1.7 0 00-2.4 0L12.5 5l3 3a2 2 0 012.6 2.6l2.9 2.9a2 2 0 11-1.2 1.2l-2.7-2.7v7a2 2 0 11-1.6 0V12a2 2 0 01-1.1-2.6L11.2 6.4 2.5 15a1.7 1.7 0 000 2.4l12.1 12.1a1.7 1.7 0 002.4 0L29.5 17a1.7 1.7 0 000-2.4z" fill="#f05032"/></svg>
-        Git
-      </div>
-      <div class="bar-track"><div class="bar-fill" data-w="74"></div></div>
-      <div class="sk-pct">74%</div>
-    </div>
-    <div class="skill-row sr">
-      <div class="sk-name">
-        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M26.7 5.6A25.2 25.2 0 0020.3 4c-.3.5-.6 1.1-.8 1.7a23.3 23.3 0 00-7 0A13 13 0 0011.7 4a25.4 25.4 0 00-6.4 1.6C1.9 11 1 16.2 1.5 21.4a25.5 25.5 0 007.7 3.9 19 19 0 001.7-2.7 16.5 16.5 0 01-2.6-1.3l.6-.5a18.2 18.2 0 0015.6 0l.6.5a16.5 16.5 0 01-2.6 1.3 19 19 0 001.7 2.7 25.4 25.4 0 007.7-3.9c.6-6-1-11.2-4.7-15.8zM11 18.3c-1.5 0-2.8-1.4-2.8-3.1S9.5 12 11 12s2.8 1.4 2.8 3.1-1.2 3.2-2.8 3.2zm9.9 0c-1.5 0-2.8-1.4-2.8-3.1S19.4 12 20.9 12s2.8 1.4 2.8 3.1-1.2 3.2-2.8 3.2z" fill="#5865F2"/></svg>
-        Discord.py
-      </div>
-      <div class="bar-track"><div class="bar-fill" data-w="76"></div></div>
-      <div class="sk-pct">76%</div>
-    </div>
+    <div class="skrow sr"><div class="sk-n"><svg viewBox="0 0 32 32"><path d="M5 3l1.9 21.4L16 27l9.1-2.6L27 3z" fill="#e44d26"/><path d="M16 25.4V5H5.9L7.5 23.2z" fill="#f16529"/><path d="M16 13.3h-4.3l-.3-3.3H16V7H8.1l.8 9.3H16zm0 7.3l-.1.1-3.6-1-.2-2.5H9.2l.5 5.3L16 24.4z" fill="#ebebeb"/><path d="M16 13.3v3h3.9l-.4 4.3-3.5 1v3.2l6.5-1.8.1-.6 1-10.9.1-1.2H16zm0-6.3v3h7.7l.2-3z" fill="#fff"/></svg>HTML5</div><div class="sk-bar"><div class="sk-fill" data-w="92"></div></div><div class="sk-pct">92%</div></div>
+    <div class="skrow sr"><div class="sk-n"><svg viewBox="0 0 32 32"><path d="M5 3l1.9 21.4L16 27l9.1-2.6L27 3z" fill="#1572b6"/><path d="M16 25.4V5H5.9L7.5 23.2z" fill="#33a9dc"/><path d="M16 13h4.4l-.3 3.5-4.1 1.1v3.2l7.6-2.1.1-.6 1.2-13H16v3zm0-6h8l-.3 3H16z" fill="#fff"/><path d="M16 13H8l.2 3h7.8v-1.5H9.3l-.2-1.5H16zm.1 4.6l-.1.1-3.6-1-.2-2.5H9.2l.5 5.3L16 21z" fill="#ebebeb"/></svg>CSS3</div><div class="sk-bar"><div class="sk-fill" data-w="88"></div></div><div class="sk-pct">88%</div></div>
+    <div class="skrow sr"><div class="sk-n"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="3" fill="#f7df1e"/><path d="M9.7 25.6l2.1-1.3c.4.7.8 1.3 1.7 1.3.9 0 1.4-.3 1.4-1.6v-8.6h2.6V24c0 2.7-1.6 3.9-3.9 3.9-2.1 0-3.3-1.1-3.9-2.3zm8.3-.3l2.1-1.2c.5.9 1.2 1.5 2.4 1.5 1 0 1.6-.5 1.6-1.2 0-.8-.7-1.1-1.8-1.6l-.6-.3c-1.8-.8-3-1.7-3-3.7 0-1.9 1.4-3.3 3.6-3.3 1.6 0 2.7.6 3.5 2l-2 1.3c-.4-.7-.9-1-1.6-1-.7 0-1.2.4-1.2 1 0 .7.4 1 1.5 1.4l.6.3c2.1.9 3.3 1.8 3.3 3.9 0 2.2-1.7 3.5-4 3.5-2.3 0-3.7-1.1-4.4-2.6z"/></svg>JavaScript</div><div class="sk-bar"><div class="sk-fill" data-w="78"></div></div><div class="sk-pct">78%</div></div>
+    <div class="skrow sr"><div class="sk-n"><svg viewBox="0 0 32 32"><defs><linearGradient id="pb" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#387EB8"/><stop offset="100%" stop-color="#366994"/></linearGradient><linearGradient id="py" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFE052"/><stop offset="100%" stop-color="#FFC331"/></linearGradient></defs><path d="M15.9 3C11 3 11.3 5.1 11.3 5.1V7.2h4.7v.7H8.6S5 7.5 5 12.4s3.1 4.8 3.1 4.8h1.9v-2.3s-.1-3.1 3.1-3.1h5.3s3 .05 3-2.9V5.8S21.9 3 15.9 3zm-2.9 1.7c.5 0 .9.4.9.9s-.4.9-.9.9-.9-.4-.9-.9.4-.9.9-.9z" fill="url(#pb)"/><path d="M16.1 29c4.9 0 4.6-2.1 4.6-2.1v-2.1h-4.7v-.7h7.4s3.6.4 3.6-4.5-3.1-4.8-3.1-4.8h-1.9v2.3s.1 3.1-3.1 3.1h-5.3s-3-.05-3 2.9v4.1S10.1 29 16.1 29zm2.9-1.7c-.5 0-.9-.4-.9-.9s.4-.9.9-.9.9.4.9.9-.4.9-.9.9z" fill="url(#py)"/></svg>Python</div><div class="sk-bar"><div class="sk-fill" data-w="82"></div></div><div class="sk-pct">82%</div></div>
+    <div class="skrow sr"><div class="sk-n"><svg viewBox="0 0 32 32"><path d="M29.5 14.6L17.4 2.5a1.7 1.7 0 00-2.4 0L12.5 5l3 3a2 2 0 012.6 2.6l2.9 2.9a2 2 0 11-1.2 1.2l-2.7-2.7v7a2 2 0 11-1.6 0V12a2 2 0 01-1.1-2.6L11.2 6.4 2.5 15a1.7 1.7 0 000 2.4l12.1 12.1a1.7 1.7 0 002.4 0L29.5 17a1.7 1.7 0 000-2.4z" fill="#f05032"/></svg>Git</div><div class="sk-bar"><div class="sk-fill" data-w="74"></div></div><div class="sk-pct">74%</div></div>
+    <div class="skrow sr"><div class="sk-n"><svg viewBox="0 0 32 32"><path d="M26.7 5.6A25.2 25.2 0 0020.3 4c-.3.5-.6 1.1-.8 1.7a23.3 23.3 0 00-7 0A13 13 0 0011.7 4a25.4 25.4 0 00-6.4 1.6C1.9 11 1 16.2 1.5 21.4a25.5 25.5 0 007.7 3.9 19 19 0 001.7-2.7 16.5 16.5 0 01-2.6-1.3l.6-.5a18.2 18.2 0 0015.6 0l.6.5a16.5 16.5 0 01-2.6 1.3 19 19 0 001.7 2.7 25.4 25.4 0 007.7-3.9c.6-6-1-11.2-4.7-15.8zM11 18.3c-1.5 0-2.8-1.4-2.8-3.1S9.5 12 11 12s2.8 1.4 2.8 3.1-1.2 3.2-2.8 3.2zm9.9 0c-1.5 0-2.8-1.4-2.8-3.1S19.4 12 20.9 12s2.8 1.4 2.8 3.1-1.2 3.2-2.8 3.2z" fill="#5865F2"/></svg>Discord.py</div><div class="sk-bar"><div class="sk-fill" data-w="76"></div></div><div class="sk-pct">76%</div></div>
   </div>
 </section>
 
 <!-- PROJECTS -->
-<section id="projects">
-  <div class="proj-top">
-    <div class="sr-l"><div class="side-num" style="font-size:4.5rem">03</div><div class="side-label">What I Build</div></div>
-    <h2 class="section-heading sr" style="text-align:right">MY<br>WORK</h2>
+<section id="projects" class="sec">
+  <div class="pr-top">
+    <div class="sl-"><div class="sn">03</div><div class="sl">What I Build</div></div>
+    <h2 class="sh sr" style="text-align:right;margin-bottom:0">MY<br>WORK</h2>
   </div>
-  <div class="proj-grid">
-
-    <!-- Custom Website — tall -->
-    <div class="proj-card tall sr">
-      <div class="proj-num">01</div>
-      <div class="proj-logo"><svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M5 3l1.9 21.4L16 27l9.1-2.6L27 3z" fill="#e44d26"/><path d="M16 25.4V5H5.9L7.5 23.2z" fill="#f16529"/><path d="M16 13.3h-4.3l-.3-3.3H16V7H8.1l.8 9.3H16zm0 7.3l-.1.1-3.6-1-.2-2.5H9.2l.5 5.3L16 24.4z" fill="#ebebeb"/><path d="M16 13.3v3h3.9l-.4 4.3-3.5 1v3.2l6.5-1.8.1-.6 1-10.9.1-1.2H16zm0-6.3v3h7.7l.2-3z" fill="#fff"/></svg></div>
-      <div class="proj-type">Custom Website</div>
-      <div class="proj-title">Web Design<br>& Dev</div>
-      <div class="proj-desc">Fully custom websites from scratch — no templates, no page builders. Clean code, sharp design, fast load times. Portfolios, landing pages, business sites.</div>
-      <div class="tech-row"><span class="tech-tag">HTML5</span><span class="tech-tag">CSS3</span><span class="tech-tag">JavaScript</span><span class="tech-tag">Responsive</span></div>
+  <div class="pgrid">
+    <div class="pc tall sr">
+      <div class="pc-n">01</div>
+      <div class="pc-ico"><svg viewBox="0 0 32 32"><path d="M5 3l1.9 21.4L16 27l9.1-2.6L27 3z" fill="#e44d26"/><path d="M16 25.4V5H5.9L7.5 23.2z" fill="#f16529"/><path d="M16 13.3h-4.3l-.3-3.3H16V7H8.1l.8 9.3H16zm0 7.3l-.1.1-3.6-1-.2-2.5H9.2l.5 5.3L16 24.4z" fill="#ebebeb"/><path d="M16 13.3v3h3.9l-.4 4.3-3.5 1v3.2l6.5-1.8.1-.6 1-10.9.1-1.2H16zm0-6.3v3h7.7l.2-3z" fill="#fff"/></svg></div>
+      <div class="pc-type">Custom Website</div>
+      <div class="pc-title">Web Design<br>& Dev</div>
+      <div class="pc-desc">Fully custom websites from scratch - no templates, no page builders. Clean code, sharp design, fast load times.</div>
+      <div class="tags"><span class="tag">HTML5</span><span class="tag">CSS3</span><span class="tag">JavaScript</span><span class="tag">Responsive</span></div>
     </div>
-
-    <!-- Discord Bot -->
-    <div class="proj-card sr">
-      <div class="proj-num">02</div>
-      <div class="proj-logo"><svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M26.7 5.6A25.2 25.2 0 0020.3 4c-.3.5-.6 1.1-.8 1.7a23.3 23.3 0 00-7 0A13 13 0 0011.7 4a25.4 25.4 0 00-6.4 1.6C1.9 11 1 16.2 1.5 21.4a25.5 25.5 0 007.7 3.9 19 19 0 001.7-2.7 16.5 16.5 0 01-2.6-1.3l.6-.5a18.2 18.2 0 0015.6 0l.6.5a16.5 16.5 0 01-2.6 1.3 19 19 0 001.7 2.7 25.4 25.4 0 007.7-3.9c.6-6-1-11.2-4.7-15.8zM11 18.3c-1.5 0-2.8-1.4-2.8-3.1S9.5 12 11 12s2.8 1.4 2.8 3.1-1.2 3.2-2.8 3.2zm9.9 0c-1.5 0-2.8-1.4-2.8-3.1S19.4 12 20.9 12s2.8 1.4 2.8 3.1-1.2 3.2-2.8 3.2z" fill="#5865F2"/></svg></div>
-      <div class="proj-type">Custom Discord Bot</div>
-      <div class="proj-title">Discord<br>Bots</div>
-      <div class="proj-desc">Custom Discord bots built with Python & discord.py. Moderation, fun commands, auto-roles, and more — built to your server's exact needs.</div>
-      <div class="tech-row"><span class="tech-tag">Python</span><span class="tech-tag">discord.py</span><span class="tech-tag">API</span></div>
+    <div class="pc sr">
+      <div class="pc-n">02</div>
+      <div class="pc-ico"><svg viewBox="0 0 32 32"><path d="M26.7 5.6A25.2 25.2 0 0020.3 4c-.3.5-.6 1.1-.8 1.7a23.3 23.3 0 00-7 0A13 13 0 0011.7 4a25.4 25.4 0 00-6.4 1.6C1.9 11 1 16.2 1.5 21.4a25.5 25.5 0 007.7 3.9 19 19 0 001.7-2.7 16.5 16.5 0 01-2.6-1.3l.6-.5a18.2 18.2 0 0015.6 0l.6.5a16.5 16.5 0 01-2.6 1.3 19 19 0 001.7 2.7 25.4 25.4 0 007.7-3.9c.6-6-1-11.2-4.7-15.8zM11 18.3c-1.5 0-2.8-1.4-2.8-3.1S9.5 12 11 12s2.8 1.4 2.8 3.1-1.2 3.2-2.8 3.2zm9.9 0c-1.5 0-2.8-1.4-2.8-3.1S19.4 12 20.9 12s2.8 1.4 2.8 3.1-1.2 3.2-2.8 3.2z" fill="#5865F2"/></svg></div>
+      <div class="pc-type">Custom Discord Bot</div>
+      <div class="pc-title">Discord<br>Bots</div>
+      <div class="pc-desc">Custom bots with Python & discord.py - moderation, auto-roles, fun commands.</div>
+      <div class="tags"><span class="tag">Python</span><span class="tag">discord.py</span><span class="tag">API</span></div>
     </div>
-
-    <!-- Custom Tools -->
-    <div class="proj-card sr">
-      <div class="proj-num">03</div>
-      <div class="proj-logo"><svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M27 5l-4 4-2-2 4-4-2-2-1 1-2-2-3 3 2 2-9 9-2-2-3 3 2 2-1 1 2 2 4-4 2 2-4 4 2 2 4-4 2 2 3-3-2-2 9-9 2 2 3-3-2-2 1-1z" fill="#00ffb3"/></svg></div>
-      <div class="proj-type">Custom Tools</div>
-      <div class="proj-title">Scripts &<br>Automation</div>
-      <div class="proj-desc">Python scripts and CLI tools for automation, data processing, file management, and web scraping. Anything repetitive — automated.</div>
-      <div class="tech-row"><span class="tech-tag">Python</span><span class="tech-tag">CLI</span><span class="tech-tag">Automation</span></div>
+    <div class="pc sr">
+      <div class="pc-n">03</div>
+      <div class="pc-ico"><svg viewBox="0 0 32 32" fill="none"><path d="M27 5l-4 4-2-2 4-4-2-2-1 1-2-2-3 3 2 2-9 9-2-2-3 3 2 2-1 1 2 2 4-4 2 2-4 4 2 2 4-4 2 2 3-3-2-2 9-9 2 2 3-3-2-2 1-1z" fill="#00ffb3"/></svg></div>
+      <div class="pc-type">Custom Tools</div>
+      <div class="pc-title">Scripts &<br>Automation</div>
+      <div class="pc-desc">Python scripts for automation, data processing, and web scraping. Anything repetitive - automated.</div>
+      <div class="tags"><span class="tag">Python</span><span class="tag">CLI</span><span class="tag">Automation</span></div>
     </div>
-
-    <!-- Canvas Drop -->
-    <div class="proj-card sr" style="grid-column:2/4">
-      <div class="proj-num">04</div>
-      <div class="proj-logo"><svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="3" fill="#f7df1e"/><path d="M9.7 25.6l2.1-1.3c.4.7.8 1.3 1.7 1.3.9 0 1.4-.3 1.4-1.6v-8.6h2.6V24c0 2.7-1.6 3.9-3.9 3.9-2.1 0-3.3-1.1-3.9-2.3zm8.3-.3l2.1-1.2c.5.9 1.2 1.5 2.4 1.5 1 0 1.6-.5 1.6-1.2 0-.8-.7-1.1-1.8-1.6l-.6-.3c-1.8-.8-3-1.7-3-3.7 0-1.9 1.4-3.3 3.6-3.3 1.6 0 2.7.6 3.5 2l-2 1.3c-.4-.7-.9-1-1.6-1-.7 0-1.2.4-1.2 1 0 .7.4 1 1.5 1.4l.6.3c2.1.9 3.3 1.8 3.3 3.9 0 2.2-1.7 3.5-4 3.5-2.3 0-3.7-1.1-4.4-2.6z"/></svg></div>
-      <div class="proj-type">Interactive · JS · Coming Soon</div>
-      <div class="proj-title">Canvas Drop</div>
-      <div class="proj-desc">A JavaScript canvas experiment — particles and physics that react to your input in real time.</div>
-      <div class="tech-row"><span class="tech-tag">JavaScript</span><span class="tech-tag">Canvas API</span></div>
+    <div class="pc sr" style="grid-column:2/4">
+      <div class="pc-n">04</div>
+      <div class="pc-ico"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="3" fill="#f7df1e"/><path d="M9.7 25.6l2.1-1.3c.4.7.8 1.3 1.7 1.3.9 0 1.4-.3 1.4-1.6v-8.6h2.6V24c0 2.7-1.6 3.9-3.9 3.9-2.1 0-3.3-1.1-3.9-2.3zm8.3-.3l2.1-1.2c.5.9 1.2 1.5 2.4 1.5 1 0 1.6-.5 1.6-1.2 0-.8-.7-1.1-1.8-1.6l-.6-.3c-1.8-.8-3-1.7-3-3.7 0-1.9 1.4-3.3 3.6-3.3 1.6 0 2.7.6 3.5 2l-2 1.3c-.4-.7-.9-1-1.6-1-.7 0-1.2.4-1.2 1 0 .7.4 1 1.5 1.4l.6.3c2.1.9 3.3 1.8 3.3 3.9 0 2.2-1.7 3.5-4 3.5-2.3 0-3.7-1.1-4.4-2.6z"/></svg></div>
+      <div class="pc-type">Interactive · JS · Coming Soon</div>
+      <div class="pc-title">Canvas Drop</div>
+      <div class="pc-desc">A JavaScript canvas experiment - particles and physics that react to your input in real time.</div>
+      <div class="tags"><span class="tag">JavaScript</span><span class="tag">Canvas API</span></div>
     </div>
-
   </div>
 </section>
 
 <!-- CONTACT -->
-<section id="contact">
+<section id="contact" class="sec">
   <div>
-    <div class="sr-l"><div class="side-num" style="font-size:4.5rem">04</div></div>
-    <h2 class="section-heading sr">LET'S<br>WORK.</h2>
-    <p class="contact-sub sr">Need a website, a Discord bot, or a custom tool? Hit me up — I build fast and keep things clean.</p>
-    <div class="c-links sr">
-      <a class="c-link" href="mailto:kaipluxury@gmail.com">
-        <div class="c-left">
-          <svg class="c-icon" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="6" fill="#EA4335"/><path d="M7 11l9 6.5L25 11" stroke="#fff" stroke-width="1.8" fill="none"/><rect x="7" y="10" width="18" height="13" rx="1.5" stroke="#fff" stroke-width="1.8" fill="none"/></svg>
-          <div><div class="c-name">Gmail</div><div class="c-handle">kaipluxury@gmail.com</div></div>
+    <div class="sl-"><div class="sn">04</div></div>
+    <h2 class="sh sr">LET'S<br>WORK.</h2>
+    <p class="ct-sub sr">Need a website, a Discord bot, or a custom tool? Hit me up - I build fast and keep things clean.</p>
+    <div class="clinks sr">
+      <a class="cl" href="mailto:kaipluxury@gmail.com">
+        <div class="cl-l">
+          <svg class="cl-ico" viewBox="0 0 32 32"><rect width="32" height="32" rx="6" fill="#EA4335"/><path d="M7 11l9 6.5L25 11" stroke="#fff" stroke-width="1.8" fill="none"/><rect x="7" y="10" width="18" height="13" rx="1.5" stroke="#fff" stroke-width="1.8" fill="none"/></svg>
+          <div><div class="cl-name">Gmail</div><div class="cl-hdl">kaipluxury@gmail.com</div></div>
         </div>
-        <div class="c-arr">→</div>
+        <div class="cl-arr">→</div>
       </a>
-      <a class="c-link" href="https://instagram.com/16zenkai" target="_blank">
-        <div class="c-left">
-          <svg class="c-icon" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="IG" cx="30%" cy="107%" r="140%"><stop offset="0" stop-color="#ffd600"/><stop offset="30%" stop-color="#ff6930"/><stop offset="50%" stop-color="#fe3b8f"/><stop offset="70%" stop-color="#c738ab"/><stop offset="90%" stop-color="#7435d4"/><stop offset="100%" stop-color="#4f73f0"/></radialGradient></defs><rect width="32" height="32" rx="8" fill="url(#IG)"/><rect x="8" y="8" width="16" height="16" rx="5" stroke="#fff" stroke-width="1.8" fill="none"/><circle cx="16" cy="16" r="4" stroke="#fff" stroke-width="1.8" fill="none"/><circle cx="22" cy="10" r="1.2" fill="#fff"/></svg>
-          <div><div class="c-name">Instagram</div><div class="c-handle">@16zenkai</div></div>
+      <a class="cl" href="https://instagram.com/16zenkai" target="_blank">
+        <div class="cl-l">
+          <svg class="cl-ico" viewBox="0 0 32 32"><defs><radialGradient id="IG" cx="30%" cy="107%" r="140%"><stop offset="0" stop-color="#ffd600"/><stop offset="30%" stop-color="#ff6930"/><stop offset="50%" stop-color="#fe3b8f"/><stop offset="70%" stop-color="#c738ab"/><stop offset="90%" stop-color="#7435d4"/><stop offset="100%" stop-color="#4f73f0"/></radialGradient></defs><rect width="32" height="32" rx="8" fill="url(#IG)"/><rect x="8" y="8" width="16" height="16" rx="5" stroke="#fff" stroke-width="1.8" fill="none"/><circle cx="16" cy="16" r="4" stroke="#fff" stroke-width="1.8" fill="none"/><circle cx="22" cy="10" r="1.2" fill="#fff"/></svg>
+          <div><div class="cl-name">Instagram</div><div class="cl-hdl">@16zenkai</div></div>
         </div>
-        <div class="c-arr">→</div>
+        <div class="cl-arr">→</div>
       </a>
-      <a class="c-link" href="https://discord.com/users/62ep" target="_blank">
-        <div class="c-left">
-          <svg class="c-icon" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="8" fill="#5865F2"/><path d="M21.5 9.5A18.6 18.6 0 0017 8.7c-.2.4-.5.9-.6 1.3a17.2 17.2 0 00-5.2 0 9.6 9.6 0 00-.6-1.3 18.7 18.7 0 00-4.7 1.2C3.5 14 2.8 18.3 3.1 22.5a19 19 0 005.7 2.9 14 14 0 001.2-2 12.2 12.2 0 01-1.9-1l.5-.3a13.5 13.5 0 0011.6 0l.5.3a12.2 12.2 0 01-1.9 1c.4.7.8 1.4 1.3 2a18.8 18.8 0 005.7-2.9c.5-4.8-.8-8.9-3.3-12.1zM11.4 20c-1.1 0-2-1-2-2.3s.9-2.3 2-2.3 2 1 2 2.3-.9 2.3-2 2.3zm7.2 0c-1.1 0-2-1-2-2.3s.9-2.3 2-2.3 2 1 2 2.3-.9 2.3-2 2.3z" fill="#fff"/></svg>
-          <div><div class="c-name">Discord</div><div class="c-handle">@62ep</div></div>
+      <a class="cl" href="https://discord.com/users/62ep" target="_blank">
+        <div class="cl-l">
+          <svg class="cl-ico" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#5865F2"/><path d="M21.5 9.5A18.6 18.6 0 0017 8.7c-.2.4-.5.9-.6 1.3a17.2 17.2 0 00-5.2 0 9.6 9.6 0 00-.6-1.3 18.7 18.7 0 00-4.7 1.2C3.5 14 2.8 18.3 3.1 22.5a19 19 0 005.7 2.9 14 14 0 001.2-2 12.2 12.2 0 01-1.9-1l.5-.3a13.5 13.5 0 0011.6 0l.5.3a12.2 12.2 0 01-1.9 1c.4.7.8 1.4 1.3 2a18.8 18.8 0 005.7-2.9c.5-4.8-.8-8.9-3.3-12.1zM11.4 20c-1.1 0-2-1-2-2.3s.9-2.3 2-2.3 2 1 2 2.3-.9 2.3-2 2.3zm7.2 0c-1.1 0-2-1-2-2.3s.9-2.3 2-2.3 2 1 2 2.3-.9 2.3-2 2.3z" fill="#fff"/></svg>
+          <div><div class="cl-name">Discord</div><div class="cl-hdl">@62ep</div></div>
         </div>
-        <div class="c-arr">→</div>
+        <div class="cl-arr">→</div>
       </a>
     </div>
   </div>
   <div class="sr">
-    <div class="avail-box">
-      <div class="av-status">Status</div>
-      <div class="av-title">Open to New Projects</div>
-      <div class="av-desc">Currently available for freelance work, collabs, and interesting ideas. Websites, bots, tools — I'm ready. Fast response guaranteed.</div>
-      <a class="av-mail" href="mailto:kaipluxury@gmail.com">kaipluxury@gmail.com</a>
+    <div class="avail">
+      <div class="av-s">Status</div>
+      <div class="av-t">Open to New Projects</div>
+      <div class="av-d">Currently available for freelance work, collabs, and interesting ideas. Websites, bots, tools - I'm ready. Fast response guaranteed.</div>
+      <a class="av-m" href="mailto:kaipluxury@gmail.com">kaipluxury@gmail.com</a>
     </div>
   </div>
 </section>
 
 <footer>
-  <div class="ft-logo">zenkai</div>
-  <div class="ft-copy">© 2026 Zenkai</div>
+  <div class="ft-l">zenkai</div>
+  <div class="ft-c">© 2026 Zenkai</div>
 </footer>
 
-<!-- FLOATING DISCORD BUTTON -->
-<div id="discord-float">
-  <a href="https://discord.com/users/62ep" target="_blank" title="DM on Discord">
-    <svg class="dc-icon" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-      <path d="M20.3 4.2A19.7 19.7 0 0015.4 3c-.2.4-.4.8-.6 1.2a18.2 18.2 0 00-5.5 0A9.7 9.7 0 008.6 3 19.8 19.8 0 003.7 4.2C.5 9 -.3 13.6.1 18.1a20 20 0 006 3.1 15 15 0 001.3-2.1 12.8 12.8 0 01-2-1l.5-.3A14.1 14.1 0 0018 17.8l.5.3a12.8 12.8 0 01-2 1 15 15 0 001.3 2.1 19.9 19.9 0 006-3.1c.5-5.1-.9-9.5-3.5-13.1zM8.0 15.5c-1.2 0-2.2-1.1-2.2-2.5s1-2.5 2.2-2.5 2.2 1.1 2.2 2.5-1 2.5-2.2 2.5zm7.9 0c-1.2 0-2.2-1.1-2.2-2.5s1-2.5 2.2-2.5 2.2 1.1 2.2 2.5-1 2.5-2.2 2.5z"/>
-    </svg>
-    <span class="dc-text">
-      DM on Discord
-      <span class="dc-handle">@62ep</span>
-    </span>
+<!-- DISCORD FLOAT -->
+<div id="dcf">
+  <a href="https://discord.com/users/62ep" target="_blank">
+    <svg class="di" viewBox="0 0 24 24" fill="white"><path d="M20.3 4.2A19.7 19.7 0 0015.4 3c-.2.4-.4.8-.6 1.2a18.2 18.2 0 00-5.5 0A9.7 9.7 0 008.6 3 19.8 19.8 0 003.7 4.2C.5 9-.3 13.6.1 18.1a20 20 0 006 3.1 15 15 0 001.3-2.1 12.8 12.8 0 01-2-1l.5-.3A14.1 14.1 0 0018 17.8l.5.3a12.8 12.8 0 01-2 1 15 15 0 001.3 2.1 19.9 19.9 0 006-3.1c.5-5.1-.9-9.5-3.5-13.1zM8 15.5c-1.2 0-2.2-1.1-2.2-2.5s1-2.5 2.2-2.5 2.2 1.1 2.2 2.5-1 2.5-2.2 2.5zm7.9 0c-1.2 0-2.2-1.1-2.2-2.5s1-2.5 2.2-2.5 2.2 1.1 2.2 2.5-1 2.5-2.2 2.5z"/></svg>
+    <span class="dt">DM on Discord<span class="dh">@62ep</span></span>
   </a>
 </div>
 
 <script>
+// ─── LOADER ────────────────────────────────────────────────────────────────
+(()=>{
+  const shell = document.getElementById('ld-shell');
+  const fill  = document.getElementById('lpf');
+  const pct   = document.getElementById('lpct');
+  const DONE  = 3400;
+
+  const lines = [
+    {d:0,    h:`<span class="lm">Last login: ${new Date().toDateString()} on ttys001</span>`},
+    {d:300,  h:`<span class="lp">zenkai@macbook</span><span style="color:#4a5078"> ~ </span><span style="color:#6b6f8f">% </span><span class="lw">neofetch --off</span>`},
+    {d:680,  h:`<span class="lm">──────────────────────────────</span>`},
+    {d:820,  h:`<span style="color:#a78bfa">  OS</span><span class="lm">          macOS Sequoia 15.4</span>`},
+    {d:960,  h:`<span style="color:#a78bfa">  Host</span><span class="lm">        MacBook Air M2</span>`},
+    {d:1090, h:`<span style="color:#a78bfa">  Shell</span><span class="lm">       zsh 5.9  ·  tmux 3.4</span>`},
+    {d:1220, h:`<span style="color:#a78bfa">  Node</span><span class="lm">         v22.1.0</span>`},
+    {d:1340, h:`<span style="color:#a78bfa">  Python</span><span class="lm">      3.12.3</span>`},
+    {d:1460, h:`<span style="color:#a78bfa">  Stack</span><span class="lm">       HTML · CSS · JS · Python · discord.py</span>`},
+    {d:1580, h:`<span class="lm">──────────────────────────────</span>`},
+    {d:1680, h:`<span class="lp">zenkai@macbook</span><span style="color:#4a5078"> ~ </span><span style="color:#6b6f8f">% </span><span class="lw">./portfolio --launch</span>`},
+    {d:1860, h:`<span class="ly">  ⠿  Compiling assets</span>`},
+    {d:2040, h:`<span class="ly">  ⠿  Mounting canvas</span>`},
+    {d:2220, h:`<span class="ly">  ⠿  Injecting styles</span>`},
+    {d:2400, h:`<span class="lg">  ✓  Build complete</span>`},
+    {d:2560, h:`<span class="lg">  ✓  Serving at </span><span style="color:var(--accent)">zenkai.dev</span>`},
+    {d:2720, h:`<span class="lm">──────────────────────────────</span>`},
+    {d:2850, h:`<span class="lp">zenkai@macbook</span><span style="color:#4a5078"> ~ </span><span style="color:#6b6f8f">% </span><span class="ld-cursor-blink"></span>`},
+  ];
+
+  lines.forEach(l=>{
+    setTimeout(()=>{
+      const el = document.createElement('div');
+      el.className = 'ld-line';
+      el.innerHTML = l.h;
+      shell.appendChild(el);
+      requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('on')));
+      shell.scrollTop = shell.scrollHeight;
+    }, l.d);
+  });
+
+  // Progress bar
+  let p = 0;
+  const iv = setInterval(()=>{
+    p = Math.min(p + Math.random()*2+.4, 98);
+    fill.style.width = p+'%';
+    pct.textContent = Math.floor(p)+'%';
+  }, 38);
+
+  setTimeout(()=>{
+    clearInterval(iv);
+    fill.style.width='100%'; pct.textContent='100%';
+  }, DONE - 150);
+
+  setTimeout(()=>document.getElementById('loader').classList.add('out'), DONE + 300);
+})();
+
 // ─── CURSOR ────────────────────────────────────────────────────────────────
-const cursor=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
-let mx=window.innerWidth/2,my=window.innerHeight/2,rx=mx,ry=my;
-document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cursor.style.left=mx+'px';cursor.style.top=my+'px'});
-(function animRing(){rx+=(mx-rx)*.1;ry+=(my-ry)*.1;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing)})();
-document.querySelectorAll('a,button,input[type=range],#discord-float a').forEach(el=>{
-  el.addEventListener('mouseenter',()=>{cursor.style.width='24px';cursor.style.height='24px';ring.style.opacity='0'});
-  el.addEventListener('mouseleave',()=>{cursor.style.width='10px';cursor.style.height='10px';ring.style.opacity='1'});
+const cur=document.getElementById('cur'),ring=document.getElementById('cur-r');
+let mx=innerWidth/2,my=innerHeight/2,rx=mx,ry=my;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px'});
+(function rr(){rx+=(mx-rx)*.09;ry+=(my-ry)*.09;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(rr)})();
+document.querySelectorAll('a,button,input').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cur.style.width='20px';cur.style.height='20px';ring.style.opacity='0'});
+  el.addEventListener('mouseleave',()=>{cur.style.width='8px';cur.style.height='8px';ring.style.opacity='1'});
 });
 
-// ─── COLOR WHEEL ───────────────────────────────────────────────────────────
+// ─── COLOR PICKER ──────────────────────────────────────────────────────────
 const root=document.documentElement;
-let currentHue=192,currentL=75;
-
-function hslToRgb(h,s,l){
+let cH=192,cL=75;
+function hsl2rgb(h,s,l){
   s/=100;l/=100;
-  const k=n=>(n+h/30)%12;
-  const a=s*Math.min(l,1-l);
-  const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
+  const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
   return[Math.round(f(0)*255),Math.round(f(8)*255),Math.round(f(4)*255)];
 }
-
 function applyColor(h,l){
-  currentHue=h;currentL=l;
-  const [r,g,b]=hslToRgb(h,85,l);
-  const hex='#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
-  root.style.setProperty('--accent',hex);
-  root.style.setProperty('--accentR',r);
-  root.style.setProperty('--accentG',g);
-  root.style.setProperty('--accentB',b);
-  document.getElementById('color-preview').style.background=hex;
-  // update sat slider gradient
-  const lo=`hsl(${h},85%,30%)`,hi=`hsl(${h},85%,90%)`;
-  document.getElementById('sat-slider').style.background=`linear-gradient(to right,${lo},${hi})`;
-  // update cursor color
-  cursor.style.background=hex;
-  // update active preset
-  document.querySelectorAll('.preset').forEach(p=>p.classList.remove('active'));
+  cH=h;cL=l;
+  const[r,g,b]=hsl2rgb(h,85,l);
+  const hx='#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
+  root.style.setProperty('--accent',hx);
+  root.style.setProperty('--aR',r);
+  root.style.setProperty('--aG',g);
+  root.style.setProperty('--aB',b);
+  document.getElementById('wp-prev').style.background=hx;
+  document.getElementById('lum-r').style.background=`linear-gradient(to right,hsl(${h},85%,35%),hsl(${h},85%,95%))`;
+  cur.style.background=hx;
 }
-
-// panel toggle
-const wheelBtn=document.getElementById('wheel-btn');
-const panel=document.getElementById('color-panel');
-wheelBtn.addEventListener('click',()=>panel.classList.toggle('open'));
-document.addEventListener('click',e=>{if(!document.getElementById('color-picker').contains(e.target))panel.classList.remove('open')});
-
-// hue slider
-const hueSlider=document.getElementById('hue-slider');
-hueSlider.addEventListener('input',()=>{applyColor(+hueSlider.value,currentL);document.querySelectorAll('.preset').forEach(p=>p.classList.remove('active'))});
-
-// brightness slider
-const satSlider=document.getElementById('sat-slider');
-satSlider.addEventListener('input',()=>{applyColor(currentHue,+satSlider.value);document.querySelectorAll('.preset').forEach(p=>p.classList.remove('active'))});
-
-// presets
-document.querySelectorAll('.preset').forEach(p=>{
-  p.addEventListener('click',()=>{
-    const h=+p.getAttribute('data-h');
-    hueSlider.value=h;
-    satSlider.value=75;
+document.getElementById('wbtn').addEventListener('click',e=>{e.stopPropagation();document.getElementById('wpanel').classList.toggle('open')});
+document.addEventListener('click',e=>{if(!document.getElementById('cpick').contains(e.target))document.getElementById('wpanel').classList.remove('open')});
+document.getElementById('hue-r').addEventListener('input',function(){applyColor(+this.value,cL)});
+document.getElementById('lum-r').addEventListener('input',function(){applyColor(cH,+this.value)});
+document.querySelectorAll('.wp-dot').forEach(d=>{
+  d.addEventListener('click',()=>{
+    const h=+d.getAttribute('data-h');
+    document.getElementById('hue-r').value=h;
+    document.getElementById('lum-r').value=75;
     applyColor(h,75);
-    document.querySelectorAll('.preset').forEach(x=>x.classList.remove('active'));
-    p.classList.add('active');
+    document.querySelectorAll('.wp-dot').forEach(x=>x.classList.remove('on'));
+    d.classList.add('on');
   });
 });
-
-// init preview
 applyColor(192,75);
 
-// ─── CANVAS DOT GRID ───────────────────────────────────────────────────────
-const cv=document.getElementById('bg-canvas'),ctx=cv.getContext('2d');
+// ─── BG CANVAS ─────────────────────────────────────────────────────────────
+const cv=document.getElementById('bgc'),ctx=cv.getContext('2d');
 let W,H,dots=[];
-function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;buildDots()}
-function buildDots(){dots=[];const g=62;for(let x=g/2;x<W;x+=g)for(let y=g/2;y<H;y+=g)dots.push({x,y,ox:x,oy:y,vx:0,vy:0})}
-function draw(){
+const resize=()=>{W=cv.width=innerWidth;H=cv.height=innerHeight;buildDots()};
+const buildDots=()=>{dots=[];const g=65;for(let x=g/2;x<W;x+=g)for(let y=g/2;y<H;y+=g)dots.push({x,y,ox:x,oy:y,vx:0,vy:0})};
+const draw=()=>{
   ctx.clearRect(0,0,W,H);
-  const [r,g,b]=[
-    parseInt(getComputedStyle(root).getPropertyValue('--accentR').trim()),
-    parseInt(getComputedStyle(root).getPropertyValue('--accentG').trim()),
-    parseInt(getComputedStyle(root).getPropertyValue('--accentB').trim())
-  ];
+  const r=+getComputedStyle(root).getPropertyValue('--aR')||0;
+  const g=+getComputedStyle(root).getPropertyValue('--aG')||212;
+  const b=+getComputedStyle(root).getPropertyValue('--aB')||255;
   dots.forEach(d=>{
     const dx=mx-d.x,dy=my-d.y,dist=Math.sqrt(dx*dx+dy*dy)||1;
-    const f=Math.max(0,95-dist)/95;
-    d.vx+=(-dx/dist)*f*2.8;d.vy+=(-dy/dist)*f*2.8;
-    d.vx+=(d.ox-d.x)*.055;d.vy+=(d.oy-d.y)*.055;
-    d.vx*=.82;d.vy*=.82;d.x+=d.vx;d.y+=d.vy;
-    const alpha=0.07+f*.35;const sz=.7+f*2.4;
+    const f=Math.max(0,90-dist)/90;
+    d.vx+=(-dx/dist)*f*2.5;d.vy+=(-dy/dist)*f*2.5;
+    d.vx+=(d.ox-d.x)*.05;d.vy+=(d.oy-d.y)*.05;
+    d.vx*=.83;d.vy*=.83;d.x+=d.vx;d.y+=d.vy;
+    const al=.05+f*.28,sz=.55+f*2;
     ctx.beginPath();ctx.arc(d.x,d.y,sz,0,Math.PI*2);
-    ctx.fillStyle=`rgba(${r},${g},${b},${alpha})`;ctx.fill();
+    ctx.fillStyle=`rgba(${r},${g},${b},${al})`;ctx.fill();
   });
   requestAnimationFrame(draw);
-}
+};
 window.addEventListener('resize',resize);resize();draw();
 
-// ─── TERMINAL ──────────────────────────────────────────────────────────────
-const termLines=[
-  {p:true,t:'whoami'},
-  {p:false,c:'t-green',t:'zenkai — developer & creator'},
-  {p:true,t:'cat services.txt'},
-  {p:false,c:'t-cyan',t:'websites / discord bots / custom tools'},
-  {p:true,t:'cat status.txt'},
-  {p:false,c:'t-purple',t:'[ OPEN ] — available for projects'},
-  {p:true,t:'ping kaipluxury@gmail.com'},
-  {p:false,c:'t-green',t:'PONG — reply time < 24h  ✓'},
-  {p:true,t:'',cur:true},
-];
-const tOut=document.getElementById('term-out');let ti=0;
-function typeNext(){
-  if(ti>=termLines.length)return;
-  const l=termLines[ti++];const d=document.createElement('div');d.className='term-line';
-  if(l.p)d.innerHTML=`<span class="t-prompt">❯ </span><span style="color:var(--fg)">${l.t}</span>${l.cur?'<span class="term-cursor"></span>':''}`;
-  else d.innerHTML=`<span class="${l.c}" style="padding-left:1rem">${l.t}</span>`;
-  tOut.appendChild(d);
-  requestAnimationFrame(()=>requestAnimationFrame(()=>d.classList.add('show')));
-  setTimeout(typeNext,l.p?800:450);
+// ─── INTERACTIVE TERMINAL ──────────────────────────────────────────────────
+const tterm = document.getElementById('tterm');
+const tin   = document.getElementById('t-in');
+let cmdHistory = [];
+let histIdx = -1;
+
+const cmds = {
+  help(){
+    return [
+      {c:'c',t:'Available commands:'},
+      {c:'w',t:'  whoami       - who is zenkai'},
+      {c:'w',t:'  skills       - show tech stack'},
+      {c:'w',t:'  services     - what I offer'},
+      {c:'w',t:'  contact      - how to reach me'},
+      {c:'w',t:'  status       - availability'},
+      {c:'w',t:'  projects     - current work'},
+      {c:'w',t:'  socials      - links'},
+      {c:'w',t:'  clear        - clear terminal'},
+      {c:'w',t:'  sudo hire    - you know what to do 👀'},
+    ];
+  },
+  whoami(){
+    return [
+      {c:'g',t:"I'm Zenkai - developer & creator based in India."},
+      {c:'',t:'I build websites, Discord bots, and Python tools.'},
+      {c:'',t:'I ship fast, keep code clean, and make things that work.'},
+    ];
+  },
+  skills(){
+    return [
+      {c:'c',t:'Tech Stack:'},
+      {c:'p',t:'  Frontend   HTML5 · CSS3 · JavaScript (78%)'},
+      {c:'p',t:'  Backend    Python 3.12 (82%)'},
+      {c:'p',t:'  Bots       discord.py (76%)'},
+      {c:'p',t:'  Tools      Git · CLI Automation'},
+    ];
+  },
+  services(){
+    return [
+      {c:'c',t:'Services:'},
+      {c:'',t:'  → Custom websites (portfolio, landing, business)'},
+      {c:'',t:'  → Discord bots (mod, fun, auto-roles, anything)'},
+      {c:'',t:'  → Python scripts & automation tools'},
+    ];
+  },
+  contact(){
+    return [
+      {c:'c',t:'Contact:'},
+      {c:'g',t:'  Email      kaipluxury@gmail.com'},
+      {c:'g',t:'  Discord    @62ep'},
+      {c:'g',t:'  Instagram  @16zenkai'},
+    ];
+  },
+  status(){
+    return [
+      {c:'g',t:'● OPEN - available for new projects'},
+      {c:'',t:'Fast turnaround. Guaranteed response < 24h.'},
+    ];
+  },
+  projects(){
+    return [
+      {c:'c',t:'Current / Recent:'},
+      {c:'',t:'  01  Web Design & Dev - custom sites from scratch'},
+      {c:'',t:'  02  Discord Bots     - python + discord.py'},
+      {c:'',t:'  03  Scripts          - automation & CLI tools'},
+      {c:'y',t:'  04  Canvas Drop     - JS canvas experiment (soon)'},
+    ];
+  },
+  socials(){
+    return [
+      {c:'c',t:'Links:'},
+      {c:'p',t:'  Instagram  → instagram.com/16zenkai'},
+      {c:'p',t:'  Discord    → discord.com/users/62ep'},
+      {c:'p',t:'  Email      → kaipluxury@gmail.com'},
+    ];
+  },
+  'sudo hire'(){
+    return [
+      {c:'y',t:'[sudo] password for zenkai: '},
+      {c:'g',t:'Access granted. Excellent choice. 🚀'},
+      {c:'',t:'Hit kaipluxury@gmail.com or @62ep on Discord.'},
+    ];
+  },
+  clear(){
+    tterm.innerHTML='';
+    return null;
+  },
+};
+
+function addLine(prompt, cmd, outputs){
+  const wrap = document.createElement('div');
+  wrap.className='tline';
+  // prompt line
+  if(cmd !== null){
+    const pl = document.createElement('div');
+    pl.innerHTML = `<span style="color:var(--accent)">❯ </span><span style="color:var(--fg)">${cmd}</span>`;
+    wrap.appendChild(pl);
+  }
+  // output lines
+  if(outputs){
+    outputs.forEach(o=>{
+      const ol = document.createElement('div');
+      ol.className = `tout ${o.c||''}`;
+      ol.textContent = o.t;
+      wrap.appendChild(ol);
+    });
+  }
+  tterm.appendChild(wrap);
+  tterm.scrollTop = tterm.scrollHeight;
 }
-setTimeout(typeNext,500);
+
+// boot messages
+setTimeout(()=>{
+  addLine(null, null, [
+    {c:'c',t:'zenkai@dev  ~  zsh  -  interactive'},
+    {c:'',t:'Type "help" to see available commands.'},
+    {c:'',t:''},
+  ]);
+}, 4000);
+
+tin.addEventListener('keydown', e=>{
+  if(e.key==='Enter'){
+    const raw = tin.value.trim();
+    if(!raw) return;
+    cmdHistory.unshift(raw);
+    histIdx = -1;
+    tin.value='';
+    const key = raw.toLowerCase();
+    const fn = cmds[key];
+    if(fn){
+      const out = fn();
+      addLine(true, raw, out);
+    } else {
+      addLine(true, raw, [
+        {c:'r',t:`zsh: command not found: ${raw}`},
+        {c:'',t:'Type "help" for available commands.'},
+      ]);
+    }
+  }
+  // history navigation
+  if(e.key==='ArrowUp'){
+    e.preventDefault();
+    if(histIdx < cmdHistory.length-1){ histIdx++; tin.value=cmdHistory[histIdx]; }
+  }
+  if(e.key==='ArrowDown'){
+    e.preventDefault();
+    if(histIdx > 0){ histIdx--; tin.value=cmdHistory[histIdx]; }
+    else{ histIdx=-1; tin.value=''; }
+  }
+  // tab-complete
+  if(e.key==='Tab'){
+    e.preventDefault();
+    const v = tin.value.toLowerCase();
+    const match = Object.keys(cmds).find(k=>k.startsWith(v));
+    if(match) tin.value=match;
+  }
+});
+
+// click terminal to focus input
+document.querySelector('.tterm').addEventListener('click', ()=>tin.focus());
 
 // ─── SCROLL REVEAL ─────────────────────────────────────────────────────────
-const srAll=document.querySelectorAll('.sr,.sr-l');
-new IntersectionObserver(entries=>{
-  entries.forEach((e,i)=>{if(e.isIntersecting)setTimeout(()=>e.target.classList.add('vis'),i*55)});
-},{threshold:.08}).observe(document.body);
-// use per-element observer for stagger
-srAll.forEach((el,i)=>{
-  new IntersectionObserver(entries=>{
-    entries.forEach(e=>{if(e.isIntersecting){setTimeout(()=>el.classList.add('vis'),50);} });
+document.querySelectorAll('.sr,.sl-').forEach(el=>{
+  new IntersectionObserver(en=>{
+    en.forEach(e=>{if(e.isIntersecting){setTimeout(()=>el.classList.add('v'),40)}});
   },{threshold:.08}).observe(el);
 });
 
 // ─── SKILL BARS ────────────────────────────────────────────────────────────
-new IntersectionObserver(entries=>{
-  entries.forEach(e=>{if(e.isIntersecting)e.target.querySelectorAll('.bar-fill').forEach(b=>{b.style.width=b.getAttribute('data-w')+'%'})});
+new IntersectionObserver(en=>{
+  en.forEach(e=>{
+    if(e.isIntersecting)
+      e.target.querySelectorAll('.sk-fill').forEach(b=>b.style.width=b.getAttribute('data-w')+'%');
+  });
 },{threshold:.15}).observe(document.getElementById('skills'));
 
 // ─── COUNT UP ──────────────────────────────────────────────────────────────
-new IntersectionObserver(entries=>{
-  entries.forEach(e=>{
-    if(e.isIntersecting)e.target.querySelectorAll('.count-up').forEach(el=>{
-      const t=+el.getAttribute('data-target');let c=0;
-      const id=setInterval(()=>{c=Math.min(c+Math.ceil(t/38),t);el.textContent=c+(t<=10?'+':'');if(c>=t)clearInterval(id)},25);
+new IntersectionObserver(en=>{
+  en.forEach(e=>{
+    if(e.isIntersecting) e.target.querySelectorAll('.cu').forEach(el=>{
+      const t=+el.getAttribute('data-t');let c=0;
+      const iv=setInterval(()=>{c=Math.min(c+Math.ceil(t/36),t);el.textContent=c+(t<=10?'+':'');if(c>=t)clearInterval(iv)},22);
     });
   });
-},{threshold:.5}).observe(document.querySelector('.about-grid'));
+},{threshold:.5}).observe(document.querySelector('.a-stats'));
 
-// ─── MAGNETIC BUTTONS ──────────────────────────────────────────────────────
-document.querySelectorAll('.btn-mag').forEach(b=>{
+// ─── MAGNETIC BTNS ─────────────────────────────────────────────────────────
+document.querySelectorAll('.btn').forEach(b=>{
   b.addEventListener('mousemove',e=>{
     const r=b.getBoundingClientRect();
-    b.style.transform=`translate(${(e.clientX-r.left-r.width/2)*.38}px,${(e.clientY-r.top-r.height/2)*.38}px)`;
+    b.style.transform=`translate(${(e.clientX-r.left-r.width/2)*.35}px,${(e.clientY-r.top-r.height/2)*.35}px)`;
   });
-  b.addEventListener('mouseleave',()=>{b.style.transform='translate(0,0)'});
+  b.addEventListener('mouseleave',()=>b.style.transform='translate(0,0)');
 });
 </script>
 </body>
